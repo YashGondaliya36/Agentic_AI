@@ -1,0 +1,205 @@
+# Company Knowledge Base - Sample FAQ
+
+## Product Information
+
+### What is TechFlow CRM?
+TechFlow CRM is a cloud-based customer relationship management system designed for small to medium businesses. It helps manage customer interactions, sales pipelines, and marketing campaigns all in one platform.
+
+### What are the main features?
+- Contact Management: Store unlimited customer contacts with detailed profiles
+- Sales Pipeline: Visual drag-and-drop sales tracking
+- Email Integration: Sync with Gmail, Outlook automatically
+- Automation: Set up automated follow-up emails and reminders
+- Analytics: Real-time dashboards and reports
+- Mobile App: iOS and Android apps available
+
+### What integrations are available?
+TechFlow CRM integrates with:
+- Email: Gmail, Outlook, Office 365
+- Calendar: Google Calendar, Outlook Calendar
+- Communication: Slack, Microsoft Teams, WhatsApp Business
+- Payments: Stripe, PayPal
+- Marketing: Mailchimp, HubSpot
+- E-commerce: Shopify, WooCommerce
+
+## Pricing
+
+### What pricing plans do you offer?
+We offer three plans:
+
+**Starter Plan - $29/month**
+- Up to 1,000 contacts
+- 2 users
+- Basic features
+- Email support
+
+**Professional Plan - $79/month**
+- Up to 10,000 contacts
+- 10 users
+- All features
+- Priority email support
+- API access
+
+**Enterprise Plan - $199/month**
+- Unlimited contacts
+- Unlimited users
+- All features
+- 24/7 phone support
+- Dedicated account manager
+- Custom integrations
+
+### Do you offer a free trial?
+Yes! We offer a 14-day free trial with full access to all Professional plan features. No credit card required.
+
+### Can I change plans later?
+Absolutely! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate the billing.
+
+## Technical Support
+
+### What are your support hours?
+- Starter Plan: Email support, 9 AM - 5 PM EST, Monday-Friday
+- Professional Plan: Email support, 24/5 (Monday-Friday)
+- Enterprise Plan: Phone + Email, 24/7 including weekends
+
+### How do I contact support?
+- Email: support@techflowcrm.com
+- Phone (Enterprise only): 1-800-TECHFLOW
+- Live Chat: Available on our website 9 AM - 5 PM EST
+- Help Center: help.techflowcrm.com
+
+### What's the average response time?
+- Email: Within 4 hours (Starter), 1 hour (Professional), 15 minutes (Enterprise)
+- Live Chat: Immediate during business hours
+- Phone: Immediate (Enterprise)
+
+## Account Management
+
+### How do I reset my password?
+1. Go to login page
+2. Click "Forgot Password"
+3. Enter your email address
+4. Check your email for reset link
+5. Click link and create new password
+
+### How do I add team members?
+1. Go to Settings > Team
+2. Click "Add User"
+3. Enter their email address
+4. Assign role (Admin, Manager, or User)
+5. They'll receive an invitation email
+
+### Can I export my data?
+Yes! You can export all your data anytime:
+1. Go to Settings > Data Export
+2. Select what to export (Contacts, Deals, etc.)
+3. Choose format (CSV, Excel, JSON)
+4. Click "Export"
+5. Download file when ready
+
+## Billing
+
+### What payment methods do you accept?
+We accept:
+- Credit cards (Visa, Mastercard, American Express)
+- Debit cards
+- PayPal
+- ACH/Bank transfer (Enterprise plans only)
+
+### When am I billed?
+- Monthly plans: Billed on the same date each month
+- Annual plans: Billed once per year (save 20%)
+- Charges appear as "TechFlow CRM" on statements
+
+### What's your refund policy?
+We offer a 30-day money-back guarantee. If you're not satisfied within the first 30 days, contact support for a full refund. After 30 days, we don't provide refunds but you can cancel anytime.
+
+### Can I get a receipt?
+Yes! Receipts are automatically emailed after each payment. You can also download them from Settings > Billing > Invoices.
+
+## Security & Privacy
+
+### Is my data secure?
+Yes! We take security seriously:
+- 256-bit SSL encryption for data transmission
+- AES-256 encryption for data at rest
+- SOC 2 Type II certified
+- Regular third-party security audits
+- Daily automated backups
+
+### Where is data stored?
+Data is stored in secure AWS data centers in the United States. Enterprise customers can choose EU or Asia-Pacific regions.
+
+### Who can see my data?
+Only authorized users in your account can access your data. TechFlow employees cannot access your data without your explicit permission for support purposes.
+
+### Are you GDPR compliant?
+Yes, we are fully GDPR compliant. We provide tools for data export, deletion, and consent management.
+
+## Getting Started
+
+### How long does setup take?
+Most customers are up and running in under 30 minutes:
+1. Create account (2 minutes)
+2. Import contacts (5-10 minutes)
+3. Customize settings (10-15 minutes)
+4. Invite team members (5 minutes)
+
+### Do you provide training?
+Yes! We offer:
+- Video tutorials in our Help Center
+- Live onboarding webinars (weekly)
+- One-on-one training sessions (Enterprise)
+- Documentation and guides
+
+### Can I import data from another CRM?
+Yes! We support imports from:
+- Salesforce
+- HubSpot
+- Zoho CRM
+- Pipedrive
+- Excel/CSV files
+
+Contact our support team for help with data migration.
+
+## Mobile App
+
+### Is there a mobile app?
+Yes! TechFlow CRM has native apps for:
+- iOS (iPhone and iPad) - iOS 14+
+- Android - Android 8.0+
+
+### What can I do on mobile?
+The mobile app includes:
+- View and edit contacts
+- Manage deals in pipeline
+- Log calls and meetings
+- Scan business cards
+- Receive push notifications
+- Offline access to recent data
+
+### Is the mobile app free?
+Yes! The mobile app is included with all plans at no extra cost.
+
+## Troubleshooting
+
+### I can't log in. What should I do?
+1. Check if Caps Lock is on
+2. Try resetting your password
+3. Clear browser cache and cookies
+4. Try a different browser
+5. Contact support if issue persists
+
+### Emails aren't syncing. How do I fix this?
+1. Go to Settings > Email Integration
+2. Click "Reconnect" next to your email
+3. Grant permissions again
+4. Wait 5-10 minutes for sync
+5. Contact support if still not working
+
+### The app is running slow. How can I speed it up?
+1. Clear browser cache
+2. Close unused tabs
+3. Check internet connection
+4. Update to latest browser version
+5. Try incognito/private mode
+6. Contact support if problem continues
