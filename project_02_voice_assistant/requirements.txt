@@ -1,0 +1,24 @@
+# Core Google Gemini
+google-genai
+
+# Audio processing
+pyaudio
+opencv-python
+pillow
+mss
+
+# LangChain and Tools
+langchain
+langchain-core
+langchain-community
+langchain-google-genai
+langchain-tavily
+
+# Search tool (fallback if langchain-tavily not available)
+tavily-python
+
+# Environment management
+python-dotenv
+
+# Async utilities
+aiofiles
