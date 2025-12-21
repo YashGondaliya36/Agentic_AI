@@ -32,6 +32,38 @@ def get_tools_config():
                         },
                         "required": ["query"]
                     }
+                },
+                {
+                    "name": "create_calendar_event",
+                    "description": """Create an event in Google Calendar. Use this when the user wants to:
+                    - Schedule a meeting
+                    - Set a reminder
+                    - Create an appointment
+                    - Block time on their calendar
+                    Example: 'Schedule a meeting tomorrow at 3pm' or 'Create event for Dec 25 at 10am'""",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "Event title/summary. Be descriptive."
+                            },
+                            "start_time": {
+                                "type": "string",
+                                "description": "When the event starts. Examples: 'tomorrow 3pm', 'today 2pm', '2024-12-25 10:00', 'next monday 9am'"
+                            },
+                            "duration_hours": {
+                                "type": "integer",
+                                "description": "Duration in hours (default: 1)",
+                                "default": 1
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Optional event description/notes"
+                            }
+                        },
+                        "required": ["title", "start_time"]
+                    }
                 }
             ]
         }
@@ -48,5 +80,6 @@ def get_tool_descriptions():
         Dict mapping tool names to descriptions
     """
     return {
-        "search_web": "Searches the internet using Tavily API"
+        "search_web": "Searches the internet using Tavily API",
+        "create_calendar_event": "Creates events in Google Calendar"
     }

@@ -17,6 +17,12 @@ langchain-tavily
 # Search tool (fallback if langchain-tavily not available)
 tavily-python
 
+# Google Calendar API
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+
 # Environment management
 python-dotenv
 

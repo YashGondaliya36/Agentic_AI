@@ -2,6 +2,7 @@
 
 from google.genai import types
 from .search import SearchTool
+from .calendar import CalendarTool
 
 
 class ToolManager:
@@ -23,10 +24,23 @@ class ToolManager:
         # Initialize all tools
         self.search_tool = SearchTool()
         
+        # Initialize Calendar tool (may require OAuth)
+        try:
+            self.calendar_tool = CalendarTool()
+            calendar_available = True
+        except FileNotFoundError as e:
+            print(f"⚠️  Calendar tool not available: {e}")
+            print("   Follow GOOGLE_CALENDAR_SETUP.md to enable it.")
+            self.calendar_tool = None
+            calendar_available = False
+        
         # Map function names to methods
         self.tool_map = {
             "search_web": self._execute_search
         }
+        
+        if calendar_available:
+            self.tool_map["create_calendar_event"] = self._execute_calendar
         
         print(f"✅ Tool Manager ready with {len(self.tool_map)} tools")
     
@@ -106,7 +120,7 @@ class ToolManager:
         
         return result
     
-    async def _execute_search(self, query: str, max_results: int = 3) -> str:
+    async def _execute_search(self, query: str, max_results: int = 2) -> str:
         """
         Execute web search
         
@@ -138,4 +152,52 @@ class ToolManager:
         else:
             error_msg = f"Search failed: {result.get('error', 'Unknown error')}"
             print(f"\n❌ {error_msg}")
+            return error_msg
+    
+    async def _execute_calendar(
+        self,
+        title: str,
+        start_time: str,
+        duration_hours: int = 1,
+        description: str = None
+    ) -> str:
+        """
+        Execute calendar event creation
+        
+        Args:
+            title: Event title
+            start_time: Start time string
+            duration_hours: Duration in hours
+            description: Optional description
+            
+        Returns:
+            Success/failure message
+        """
+        if not self.calendar_tool:
+            return "Calendar tool not available. Please set up Google Calendar API."
+        
+        print(f"\n📅 Creating calendar event: '{title}'")
+        print(f"   Start: {start_time}")
+        print(f"   Duration: {duration_hours}h")
+        
+        result = await self.calendar_tool.create_event(
+            title=title,
+            start_time=start_time,
+            duration_hours=duration_hours,
+            description=description
+        )
+        
+        if result["success"]:
+            response = (
+                f"✅ Event created successfully!\n"
+                f"   Title: {result['title']}\n"
+                f"   Start: {result['start']}\n"
+                f"   End: {result['end']}\n"
+                f"   Link: {result.get('link', 'N/A')}"
+            )
+            print(f"\n{response}")
+            return response
+        else:
+            error_msg = f"❌ Failed to create event: {result.get('error', 'Unknown error')}"
+            print(f"\n{error_msg}")
             return error_msg

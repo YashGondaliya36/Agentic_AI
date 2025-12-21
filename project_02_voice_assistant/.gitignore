@@ -17,6 +17,10 @@ ENV/
 # Environment Variables (IMPORTANT - Don't commit API keys!)
 .env
 
+# Google Calendar OAuth (IMPORTANT - Don't commit!)
+credentials.json
+token.json
+
 # IDE
 .vscode/
 .idea/
