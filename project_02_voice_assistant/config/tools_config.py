@@ -64,6 +64,32 @@ def get_tools_config():
                         },
                         "required": ["title", "start_time"]
                     }
+                },
+                {
+                    "name": "send_email",
+                    "description": """Send an email via Gmail. Use this when the user wants to:
+                    - Send an email to someone
+                    - Email information or summaries
+                    - Share details via email
+                    Example: 'Email me the search results' or 'Send summary to john@example.com'""",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "to": {
+                                "type": "string",
+                                "description": "Recipient email address. If user says 'email me', use their authenticated Gmail address."
+                            },
+                            "subject": {
+                                "type": "string",
+                                "description": "Email subject line"
+                            },
+                            "body": {
+                                "type": "string",
+                                "description": "Email body content (plain text)"
+                            }
+                        },
+                        "required": ["to", "subject", "body"]
+                    }
                 }
             ]
         }
@@ -81,5 +107,6 @@ def get_tool_descriptions():
     """
     return {
         "search_web": "Searches the internet using Tavily API",
-        "create_calendar_event": "Creates events in Google Calendar"
+        "create_calendar_event": "Creates events in Google Calendar",
+        "send_email": "Sends emails via Gmail"
     }

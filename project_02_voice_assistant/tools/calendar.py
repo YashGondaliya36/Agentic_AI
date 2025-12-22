@@ -14,8 +14,11 @@ from googleapiclient.errors import HttpError
 
 load_dotenv()
 
-# Scopes for Google Calendar API
-SCOPES = ['https://www.googleapis.com/auth/calendar']
+# Scopes for Google Calendar API and Gmail
+SCOPES = [
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/gmail.send'
+]
 
 
 class CalendarTool:

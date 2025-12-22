@@ -3,6 +3,7 @@
 from google.genai import types
 from .search import SearchTool
 from .calendar import CalendarTool
+from .gmail import GmailTool
 
 
 class ToolManager:
@@ -34,6 +35,16 @@ class ToolManager:
             self.calendar_tool = None
             calendar_available = False
         
+        # Initialize Gmail tool (uses same OAuth as Calendar)
+        try:
+            self.gmail_tool = GmailTool()
+            gmail_available = True
+        except FileNotFoundError as e:
+            print(f"⚠️  Gmail tool not available: {e}")
+            print("   Follow GOOGLE_CALENDAR_SETUP.md to enable it.")
+            self.gmail_tool = None
+            gmail_available = False
+        
         # Map function names to methods
         self.tool_map = {
             "search_web": self._execute_search
@@ -41,6 +52,9 @@ class ToolManager:
         
         if calendar_available:
             self.tool_map["create_calendar_event"] = self._execute_calendar
+        
+        if gmail_available:
+            self.tool_map["send_email"] = self._execute_gmail
         
         print(f"✅ Tool Manager ready with {len(self.tool_map)} tools")
     
@@ -199,5 +213,49 @@ class ToolManager:
             return response
         else:
             error_msg = f"❌ Failed to create event: {result.get('error', 'Unknown error')}"
+            print(f"\n{error_msg}")
+            return error_msg
+    
+    async def _execute_gmail(
+        self,
+        to: str,
+        subject: str,
+        body: str
+    ) -> str:
+        """
+        Execute email sending
+        
+        Args:
+            to: Recipient email
+            subject: Email subject
+            body: Email body
+            
+        Returns:
+            Success/failure message
+        """
+        if not self.gmail_tool:
+            return "Gmail tool not available. Please set up Gmail API."
+        
+        print(f"\n📧 Sending email to: {to}")
+        print(f"   Subject: {subject}")
+        print(f"   Body length: {len(body)} chars")
+        
+        result = await self.gmail_tool.send_email(
+            to=to,
+            subject=subject,
+            body=body
+        )
+        
+        if result["success"]:
+            response = (
+                f"✅ Email sent successfully!\n"
+                f"   To: {result['to']}\n"
+                f"   Subject: {result['subject']}\n"
+                f"   Message ID: {result.get('message_id', 'N/A')}"
+            )
+            print(f"\n{response}")
+            return response
+        else:
+            error_msg = f"❌ Failed to send email: {result.get('error', 'Unknown error')}"
             print(f"\n{error_msg}")
             return error_msg
