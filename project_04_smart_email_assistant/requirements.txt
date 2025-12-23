@@ -1,0 +1,29 @@
+# LangGraph
+langgraph>=0.2.0
+
+# Google AI
+google-generativeai
+
+# LangChain (minimal, for tools only)
+langchain
+langchain-core
+langchain-community
+
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+
+# Search (for context)
+langchain-tavily
+tavily-python
+
+# Environment
+python-dotenv
+
+# Utilities
+pydantic>=2.0.0
+typing-extensions
+
+# CLI (for user interaction)
+rich
