@@ -31,7 +31,7 @@ class DraftWriterAgent:
         genai.configure(api_key=api_key)
         
         self.model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash-exp",
+            model_name="gemini-2.0-flash-lite",
             generation_config={
                 "temperature": 0.7,  # Balanced for professional writing
                 "top_p": 0.9,

@@ -21,7 +21,7 @@ class AnalyzerAgent:
     def __init__(self):
         """Initialize the LLM for analysis"""
         api_key = os.getenv("GOOGLE_API_KEY")
-        model_name = os.getenv("MODEL_NAME", "gemini-2.0-flash-exp")
+        model_name = os.getenv("MODEL_NAME", "gemini-2.0-flash-lite")
         
         if not api_key:
             raise ValueError("GOOGLE_API_KEY not found in environment")

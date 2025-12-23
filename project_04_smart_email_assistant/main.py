@@ -121,44 +121,73 @@ def process_email(email_data, app):
     # Create initial state
     initial_state = create_initial_state(email_data)
     
-    # Run workflow up to human review point
+    # Config for workflow
     config = {"configurable": {"thread_id": email_data['id']}}
     
     # Step 1: Classify
     console.print("\n[bold]Step 1: Classifying email...[/bold]")
-    state = app.invoke(initial_state, config)
     
-    # Check if archived (no response needed)
-    if state.get("processing_step") == "complete":
-        console.print("[dim]Email archived (no response needed)[/dim]")
+    # Run ONLY the classification step
+    from agents.classifier import classifier_agent
+    state = classifier_agent.classify(initial_state)
+    
+    # Check if we should respond
+    if not state.get("action_required", False) or state.get("category") in ["spam", "promotional"]:
+        console.print("\n[yellow]📥 No response needed - Archiving email[/yellow]")
+        
+        # Mark as read
+        from integrations.gmail_client import gmail_client
+        gmail_client.mark_as_read(email_data['id'])
+        console.print("[dim]✅ Marked as read[/dim]")
         return
     
-    # Step 2: Human reviews draft
-    console.print("\n[bold]Step 2: Review AI-generated draft[/bold]")
+    # Step 2: Generate draft
+    console.print("\n[bold]Step 2: Generating draft response...[/bold]")
+    
+    from agents.draft_writer import draft_writer_agent
+    state = draft_writer_agent.write_draft(state)
+    
+    # Step 3: HUMAN REVIEW (CRITICAL - MUST HAPPEN!)
+    console.print("\n[bold]Step 3: 👤 Human Review (Your Approval Required)[/bold]")
     
     approved, edited_draft = review_draft(state)
     
     if not approved:
-        console.print("[yellow]⏭️  Skipping this email[/yellow]")
+        console.print("\n[red]❌ Email NOT sent (you chose to skip)[/red]")
         return
     
-    # Update state with human input
+    # Update state with human decision
     if edited_draft:
         state["draft_edited"] = edited_draft
         state["human_intervention"] = True
     
     state["draft_approved"] = True
     
-    # Step 3: Send email
-    console.print("\n[bold]Step 3: Sending email...[/bold]")
+    # Step 4: Send ONLY if approved
+    console.print("\n[bold]Step 4: Sending approved email...[/bold]")
     
-    # Continue workflow (send email)
-    final_state = app.invoke(state, config)
+    from integrations.gmail_client import gmail_client
     
-    if final_state.get("error"):
-        console.print(f"[red]❌ Error: {final_state['error']}[/red]")
+    # Use edited draft if available, otherwise original
+    final_draft = state.get("draft_edited", "") or state["draft_response"]
+    
+    # Get recipient
+    recipient = state["email"]["from_email"]
+    subject = f"Re: {state['email']['subject']}"
+    
+    # Send email
+    success = gmail_client.send_email(
+        to=recipient,
+        subject=subject,
+        body=final_draft
+    )
+    
+    if success:
+        # Mark original as read
+        gmail_client.mark_as_read(state["email"]["id"])
+        console.print("\n[green]✅ Email sent successfully and original marked as read![/green]")
     else:
-        console.print("[green]✅ Email processed successfully![/green]")
+        console.print("\n[red]❌ Failed to send email[/red]")
 
 
 def main():
