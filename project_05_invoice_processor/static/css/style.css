@@ -381,6 +381,105 @@ body {
     font-size: 0.85rem;
 }
 
+.upload-type-label {
+    margin-top: var(--spacing-sm);
+    color: var(--primary-light);
+    font-size: 0.9rem;
+}
+
+/* ========== Invoice Type Selector ========== */
+.invoice-type-selector {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+}
+
+.type-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.type-btn {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.type-btn:hover {
+    border-color: var(--primary);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.type-btn.active {
+    border-color: var(--primary);
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-glow);
+}
+
+.type-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.type-btn h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.type-btn p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.type-btn.active h4,
+.type-btn.active p {
+    color: white;
+}
+
+/* ========== Invoice Filter Buttons ========== */
+.invoice-filter-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.filter-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+    background: var(--bg-glass);
+    border-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.filter-btn.active {
+    background: var(--gradient-primary);
+    border-color: transparent;
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
 /* ========== Processing Status ========== */
 .processing-status {
     background: var(--bg-card);

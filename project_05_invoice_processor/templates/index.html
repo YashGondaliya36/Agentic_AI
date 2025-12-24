@@ -102,12 +102,33 @@
                 <div class="upload-section">
                     <h2 class="section-title">Upload Invoice</h2>
 
+                    <!-- Invoice Type Selection -->
+                    <div class="invoice-type-selector" id="invoiceTypeSelector">
+                        <h3 style="text-align: center; margin-bottom: 1.5rem; color: var(--text-primary);">
+                            What type of invoice?
+                        </h3>
+                        <div class="type-buttons">
+                            <button class="type-btn active" data-type="purchase">
+                                <div class="type-icon">📥</div>
+                                <h4>Purchase Invoice</h4>
+                                <p>Stock IN - You are buying from supplier</p>
+                            </button>
+                            <button class="type-btn" data-type="sales">
+                                <div class="type-icon">📤</div>
+                                <h4>Sales Invoice</h4>
+                                <p>Stock OUT - You are selling to customer</p>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Upload Zone -->
                     <div class="upload-zone" id="uploadZone">
                         <div class="upload-icon">📄</div>
                         <h3>Drag & Drop Invoice Here</h3>
                         <p>or click to browse</p>
                         <p class="upload-formats">Supports: PDF, JPG, PNG</p>
+                        <p class="upload-type-label"><strong id="selectedTypeLabel">Purchase Invoice</strong> selected
+                        </p>
                         <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" hidden>
                     </div>
 
@@ -122,29 +143,29 @@
                     <div class="review-section hidden" id="reviewSection">
                         <h2 class="section-title">Review Extracted Data</h2>
 
-                        <!-- Supplier Info -->
+                        <!-- Supplier/Customer Info -->
                         <div class="review-card">
-                            <h3 class="review-card-title">Supplier Information</h3>
+                            <h3 class="review-card-title" id="partnerCardTitle">Supplier Information</h3>
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label>Supplier Name</label>
-                                    <input type="text" id="supplier-name" class="form-input">
+                                    <label id="partnerNameLabel">Supplier Name</label>
+                                    <input type="text" id="partner-name" class="form-input">
                                 </div>
                                 <div class="form-group">
                                     <label>GSTIN</label>
-                                    <input type="text" id="supplier-gstin" class="form-input">
+                                    <input type="text" id="partner-gstin" class="form-input">
                                 </div>
                                 <div class="form-group">
                                     <label>Contact</label>
-                                    <input type="text" id="supplier-contact" class="form-input">
+                                    <input type="text" id="partner-contact" class="form-input">
                                 </div>
                                 <div class="form-group">
                                     <label>Email</label>
-                                    <input type="email" id="supplier-email" class="form-input">
+                                    <input type="email" id="partner-email" class="form-input">
                                 </div>
                                 <div class="form-group full-width">
                                     <label>Address</label>
-                                    <textarea id="supplier-address" class="form-input" rows="2"></textarea>
+                                    <textarea id="partner-address" class="form-input" rows="2"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -183,9 +204,11 @@
                                             <th>HSN Code</th>
                                             <th>Qty</th>
                                             <th>Unit</th>
+                                            <th class="cost-col hidden">Cost</th>
                                             <th>Unit Price</th>
                                             <th>GST %</th>
                                             <th>Total</th>
+                                            <th class="profit-col hidden">Profit</th>
                                             <th>Match</th>
                                         </tr>
                                     </thead>
@@ -208,6 +231,10 @@
                                     <span>Total GST:</span>
                                     <span id="total-gst">₹0.00</span>
                                 </div>
+                                <div class="total-row profit-row hidden">
+                                    <span>Total Profit:</span>
+                                    <span id="total-profit" style="color: var(--success);">₹0.00</span>
+                                </div>
                                 <div class="total-row grand-total">
                                     <span>Grand Total:</span>
                                     <span id="total-amount">₹0.00</span>
@@ -229,7 +256,13 @@
 
             <!-- Invoices View -->
             <div class="view" id="view-invoices">
-                <h2 class="section-title">Purchase Invoices</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 class="section-title" style="margin: 0;">Invoices</h2>
+                    <div class="invoice-filter-buttons">
+                        <button class="filter-btn active" data-filter="purchase">📥 Purchases</button>
+                        <button class="filter-btn" data-filter="sales">📤 Sales</button>
+                    </div>
+                </div>
                 <div class="invoices-list" id="invoicesList">
                     <!-- Populated by JS -->
                 </div>

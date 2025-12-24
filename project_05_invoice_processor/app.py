@@ -120,10 +120,17 @@ async def upload_invoice(file: UploadFile = File(...)):
         catalog_list = [{"id": item.id, "name": item.name} for item in catalog_items]
         
         for item_data in invoice_data.get("items", []):
-            matched = extractor.smart_item_match(item_data["name"], catalog_list)
-            if matched:
-                item_data["matched_item_id"] = matched["id"]
-                item_data["matched_item_name"] = matched["name"]
+            # TEMPORARILY DISABLED: Smart AI matching (quota issues)
+            # matched = extractor.smart_item_match(item_data["name"], catalog_list)
+            
+            # Simple name matching instead
+            item_name = item_data["name"].strip().lower()
+            matched_item = next((item for item in catalog_items 
+                               if item.name.lower() == item_name), None)
+            
+            if matched_item:
+                item_data["matched_item_id"] = matched_item.id
+                item_data["matched_item_name"] = matched_item.name
         
         session.close()
         
@@ -348,26 +355,31 @@ async def upload_sales_invoice(file: UploadFile = File(...)):
         total_potential_profit = 0
         
         for item_data in invoice_data.get("items", []):
-            matched =extractor.smart_item_match(item_data["name"], catalog_list)
-            if matched:
-                item_data["matched_item_id"] = matched["id"]
-                item_data["matched_item_name"] = matched["name"]
+            # TEMPORARILY DISABLED: Smart AI matching (quota issues)
+            # matched = extractor.smart_item_match(item_data["name"], catalog_list)
+            
+            # Simple name matching instead
+            item_name = item_data["name"].strip().lower()
+            matched_item = next((item for item in catalog_items 
+                               if item.name.lower() == item_name), None)
+            
+            if matched_item:
+                item_data["matched_item_id"] = matched_item.id
+                item_data["matched_item_name"] = matched_item.name
                 
                 # Get cost price for profit calculation
-                matched_item = next((item for item in catalog_items if item.id == matched["id"]), None)
-                if matched_item:
-                    cost_price = matched_item.last_cost_price
-                    selling_price = item_data.get("unit_price", 0)
-                    quantity = item_data.get("quantity", 0)
-                    profit = (selling_price - cost_price) * quantity
-                    
-                    item_data["cost_price"] = cost_price
-                    item_data["selling_price"] = selling_price
-                    item_data["profit_per_unit"] = selling_price - cost_price
-                    item_data["total_profit"] = profit
-                    item_data["current_stock"] = matched_item.current_stock
-                    
-                    total_potential_profit += profit
+                cost_price = matched_item.last_cost_price
+                selling_price = item_data.get("unit_price", 0)
+                quantity = item_data.get("quantity", 0)
+                profit = (selling_price - cost_price) * quantity
+                
+                item_data["cost_price"] = cost_price
+                item_data["selling_price"] = selling_price
+                item_data["profit_per_unit"] = selling_price - cost_price
+                item_data["total_profit"] = profit
+                item_data["current_stock"] = matched_item.current_stock
+                
+                total_potential_profit += profit
         
         invoice_data["total_potential_profit"] = total_potential_profit
         
