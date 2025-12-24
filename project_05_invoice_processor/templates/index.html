@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvoiceIQ - AI Invoice Processor</title>
+    <meta name="description"
+        content="Automated invoice processing for hardware distributors with AI-powered extraction">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">📊</div>
+                    <h1>InvoiceIQ</h1>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn active" data-view="upload">
+                        <span class="icon">📤</span>
+                        Upload
+                    </button>
+                    <button class="nav-btn" data-view="invoices">
+                        <span class="icon">📋</span>
+                        Invoices
+                    </button>
+                    <button class="nav-btn" data-view="inventory">
+                        <span class="icon">📦</span>
+                        Inventory
+                    </button>
+                    <button class="nav-btn" data-view="analytics">
+                        <span class="icon">📊</span>
+                        Analytics
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="stats">
+                <div class="stat-card">
+                    <div class="stat-icon">📄</div>
+                    <div class="stat-info">
+                        <p class="stat-label">Total Invoices</p>
+                        <h3 class="stat-value" id="stat-invoices">0</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-info">
+                        <p class="stat-label">Items in Catalog</p>
+                        <h3 class="stat-value" id="stat-items">0</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">🏢</div>
+                    <div class="stat-info">
+                        <p class="stat-label">Suppliers</p>
+                        <h3 class="stat-value" id="stat-suppliers">0</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card alert">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-info">
+                        <p class="stat-label">Low Stock Alerts</p>
+                        <h3 class="stat-value" id="stat-alerts">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Views -->
+
+            <!-- Upload View -->
+            <div class="view active" id="view-upload">
+                <div class="upload-section">
+                    <h2 class="section-title">Upload Invoice</h2>
+
+                    <!-- Upload Zone -->
+                    <div class="upload-zone" id="uploadZone">
+                        <div class="upload-icon">📄</div>
+                        <h3>Drag & Drop Invoice Here</h3>
+                        <p>or click to browse</p>
+                        <p class="upload-formats">Supports: PDF, JPG, PNG</p>
+                        <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                    </div>
+
+                    <!-- Processing Status -->
+                    <div class="processing-status hidden" id="processingStatus">
+                        <div class="spinner"></div>
+                        <p class="processing-text">AI is extracting invoice data...</p>
+                        <p class="processing-subtext">This usually takes 3-5 seconds</p>
+                    </div>
+
+                    <!-- Extracted Data Review -->
+                    <div class="review-section hidden" id="reviewSection">
+                        <h2 class="section-title">Review Extracted Data</h2>
+
+                        <!-- Supplier Info -->
+                        <div class="review-card">
+                            <h3 class="review-card-title">Supplier Information</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Supplier Name</label>
+                                    <input type="text" id="supplier-name" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>GSTIN</label>
+                                    <input type="text" id="supplier-gstin" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contact</label>
+                                    <input type="text" id="supplier-contact" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="supplier-email" class="form-input">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label>Address</label>
+                                    <textarea id="supplier-address" class="form-input" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Details -->
+                        <div class="review-card">
+                            <h3 class="review-card-title">Invoice Details</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Invoice Number</label>
+                                    <input type="text" id="invoice-number" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Invoice Date</label>
+                                    <input type="date" id="invoice-date" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Due Date</label>
+                                    <input type="date" id="invoice-due-date" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>Payment Terms (Days)</label>
+                                    <input type="number" id="payment-terms" class="form-input" value="30">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <div class="review-card">
+                            <h3 class="review-card-title">Invoice Items</h3>
+                            <div class="table-container">
+                                <table class="items-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item Name</th>
+                                            <th>HSN Code</th>
+                                            <th>Qty</th>
+                                            <th>Unit</th>
+                                            <th>Unit Price</th>
+                                            <th>GST %</th>
+                                            <th>Total</th>
+                                            <th>Match</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsTableBody">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="review-card">
+                            <h3 class="review-card-title">Invoice Totals</h3>
+                            <div class="totals-grid">
+                                <div class="total-row">
+                                    <span>Subtotal:</span>
+                                    <span id="total-subtotal">₹0.00</span>
+                                </div>
+                                <div class="total-row">
+                                    <span>Total GST:</span>
+                                    <span id="total-gst">₹0.00</span>
+                                </div>
+                                <div class="total-row grand-total">
+                                    <span>Grand Total:</span>
+                                    <span id="total-amount">₹0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" id="btnCancel">Cancel</button>
+                            <button class="btn btn-primary" id="btnSave">
+                                <span class="btn-icon">💾</span>
+                                Save to Database
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoices View -->
+            <div class="view" id="view-invoices">
+                <h2 class="section-title">Purchase Invoices</h2>
+                <div class="invoices-list" id="invoicesList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Inventory View -->
+            <div class="view" id="view-inventory">
+                <h2 class="section-title">Inventory</h2>
+                <div class="inventory-list" id="inventoryList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div class="view" id="view-analytics">
+                <h2 class="section-title">Analytics</h2>
+                <div class="analytics-content">
+                    <p class="placeholder-text">📊 Analytics dashboard coming soon...</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript -->
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>

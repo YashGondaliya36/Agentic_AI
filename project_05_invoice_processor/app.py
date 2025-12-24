@@ -263,6 +263,10 @@ async def save_invoice(request: Request):
             item.current_stock += item_data.get("quantity", 0)
         
         session.commit()
+        
+        # Get ID before closing session
+        invoice_id = purchase_invoice.id
+        
         session.close()
         
         print(f"✅ Saved invoice: {invoice_number} ({len(items_data)} items)")
@@ -270,7 +274,7 @@ async def save_invoice(request: Request):
         return JSONResponse({
             "success": True,
             "message": "Invoice saved successfully!",
-            "invoice_id": purchase_invoice.id,
+            "invoice_id": invoice_id,
             "invoice_number": invoice_number
         })
     
