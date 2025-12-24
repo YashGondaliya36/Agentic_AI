@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Email Assistant - AI-Powered Email Automation</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Background -->
+    <div class="background">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon">📧</span>
+                <span class="brand-text">Smart Email Assistant</span>
+            </div>
+            <div class="nav-stats">
+                <div class="stat-badge">
+                    <span class="stat-label">Emails</span>
+                    <span class="stat-value" id="emailCount">0</span>
+                </div>
+                <div class="stat-badge">
+                    <span class="stat-label">Processed</span>
+                    <span class="stat-value" id="processedCount">0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">
+                    <span class="gradient-text">AI Email Automation</span>
+                </h1>
+                <p class="subtitle">Classify, respond, and manage your emails intelligently</p>
+            </div>
+            <button class="btn btn-primary" id="refreshBtn">
+                <span class="btn-icon">🔄</span>
+                Refresh Inbox
+            </button>
+        </header>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Fetching your emails...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon">📭</div>
+            <h2>Inbox Zero!</h2>
+            <p>No unread emails found. You're all caught up!</p>
+        </div>
+
+        <!-- Email List -->
+        <div class="email-grid" id="emailGrid"></div>
+    </div>
+
+    <!-- Modal for Email Details -->
+    <div class="modal" id="emailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Email Details</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Email Info -->
+                <div class="email-info">
+                    <div class="info-row">
+                        <span class="info-label">From:</span>
+                        <span class="info-value" id="modalFrom"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Subject:</span>
+                        <span class="info-value" id="modalSubject"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Category:</span>
+                        <span class="badge" id="modalCategory">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Priority:</span>
+                        <span id="modalPriority">-</span>
+                    </div>
+                </div>
+
+                <!-- Email Body -->
+                <div class="email-body-section">
+                    <h3>Email Content</h3>
+                    <div class="email-body" id="modalBody"></div>
+                </div>
+
+                <!-- Draft Response -->
+                <div class="draft-section" id="draftSection" style="display: none;">
+                    <h3>AI-Generated Response</h3>
+                    <textarea class="draft-textarea" id="draftTextarea" rows="10"></textarea>
+
+                    <div class="draft-actions">
+                        <button class="btn btn-success" id="sendBtn">
+                            <span class="btn-icon">📤</span>
+                            Send Email
+                        </button>
+                        <button class="btn btn-secondary" id="regenerateBtn">
+                            <span class="btn-icon">🔄</span>
+                            Regenerate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="classifyBtn">
+                        <span class="btn-icon">🏷️</span>
+                        Classify Email
+                    </button>
+                    <button class="btn btn-primary" id="generateDraftBtn">
+                        <span class="btn-icon">✍️</span>
+                        Generate Draft
+                    </button>
+                    <button class="btn btn-danger" id="archiveBtn">
+                        <span class="btn-icon">📥</span>
+                        Archive
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>

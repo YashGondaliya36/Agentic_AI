@@ -1,0 +1,10 @@
+# Web UI Dependencies
+fastapi
+uvicorn
+python-multipart
+jinja2
+websockets
+aiofiles
+
+# Already have from main requirements
+# (no need to duplicate)

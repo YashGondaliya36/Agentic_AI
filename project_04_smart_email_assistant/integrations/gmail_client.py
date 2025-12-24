@@ -35,8 +35,10 @@ class GmailClient:
     
     def __init__(self):
         """Initialize Gmail client with OAuth"""
-        self.credentials_file = 'credentials.json'
-        self.token_file = 'token.json'
+        # Look for credentials in project root (parent directory)
+        project_root = Path(__file__).parent.parent
+        self.credentials_file = project_root / 'credentials.json'
+        self.token_file = project_root / 'token.json'
         self.service = None
         self._authenticate()
     
@@ -45,27 +47,26 @@ class GmailClient:
         creds = None
         
         # Check for existing token
-        if os.path.exists(self.token_file):
-            creds = Credentials.from_authorized_user_file(self.token_file, SCOPES)
+        if self.token_file.exists():
+            creds = Credentials.from_authorized_user_file(str(self.token_file), SCOPES)
         
         # Refresh or get new credentials
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                if not os.path.exists(self.credentials_file):
+                if not self.credentials_file.exists():
                     raise FileNotFoundError(
                         f"{self.credentials_file} not found!\n"
                         "Please download OAuth credentials from Google Cloud Console."
                     )
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    self.credentials_file, SCOPES
+                    str(self.credentials_file), SCOPES
                 )
                 creds = flow.run_local_server(port=0)
             
             # Save credentials
-            with open(self.token_file, 'w') as token:
-                token.write(creds.to_json())
+            self.token_file.write_text(creds.to_json())
         
         self.service = build('gmail', 'v1', credentials=creds)
         print("✅ Gmail authenticated!")
