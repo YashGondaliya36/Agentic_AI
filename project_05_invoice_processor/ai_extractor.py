@@ -168,6 +168,129 @@ IMPORTANT RULES:
                 "error": str(e)
             }
     
+    def extract_sales_invoice(self, image_path: str) -> Dict[str, Any]:
+        """
+        Extract data from SALES invoice (you are the seller).
+        
+        Args:
+            image_path: Path to invoice image/PDF
+            
+        Returns:
+            Dictionary with extracted invoice data
+        """
+        print(f"\n📄 Processing SALES invoice: {Path(image_path).name}")
+        
+        # Check file type
+        file_path = Path(image_path)
+        file_ext = file_path.suffix.lower()
+        
+        # Load file based on type
+        try:
+            if file_ext == '.pdf':
+                print("   📑 Processing PDF file...")
+                with open(file_path, 'rb') as f:
+                    pdf_data = f.read()
+                
+                from google.generativeai.types import content_types
+                file_input = {
+                    "mime_type": "application/pdf",
+                    "data": pdf_data
+                }
+            else:
+                print("   🖼️  Processing image file...")
+                image = Image.open(image_path)
+                file_input = image
+                
+        except Exception as e:
+            return {"success": False, "error": f"Failed to load file: {e}"}
+        
+        # Create detailed prompt for SALES invoices
+        prompt = """Extract ALL data from this SALES invoice. This is an invoice where YOU (the business) are SELLING to a CUSTOMER.
+
+**CRITICAL: Return ONLY valid JSON, no markdown, no explanations.**
+
+Extract the following in this EXACT JSON format:
+
+{
+  "customer_name": "Customer/buyer name",
+  "invoice_number": "Invoice/bill number",
+  "invoice_date": "Date (YYYY-MM-DD format)",
+  "due_date": "Payment due date (YYYY-MM-DD) or null",
+  "customer_gstin": "Customer GST number if present",
+  "customer_address": "Customer address",
+  "customer_contact": "Phone/email if present",
+  
+  "items": [
+    {
+      "name": "Item/product name",
+      "description": "Additional details if any",
+      "hsn_code": "HSN/SAC code if present",
+      "quantity": float (just number),
+      "unit": "piece/box/kg/etc",
+      "unit_price": float (selling price per unit before GST),
+      "gst_rate": float (GST % like 18, 12, 5),
+      "gst_amount": float,
+      "total": float (final amount for this item)
+    }
+  ],
+  
+  "subtotal": float (total before GST),
+  "total_gst": float (total GST amount),
+  "total_amount": float (grand total),
+  "payment_terms": "Net 30 days or similar",
+  
+  "raw_text": "Any other important information from invoice"
+}
+
+IMPORTANT RULES:
+- Return ONLY the JSON object, nothing else
+- All amounts must be numbers (float), not strings
+- If a field is not found, use null
+- For items, extract ALL line items
+- Be precise with numbers and calculations
+- This is a SALES invoice (you are selling TO the customer)
+"""
+        
+        try:
+            # Send to Gemini Vision
+            response = self.model.generate_content([prompt, file_input])
+            result_text = response.text.strip()
+            
+            # Clean response
+            if result_text.startswith("```json"):
+                result_text = result_text.replace("```json", "").replace("```", "").strip()
+            elif result_text.startswith("```"):
+                result_text = result_text.replace("```", "").strip()
+            
+            # Parse JSON
+            data = json.loads(result_text)
+            
+            print(f"✅ Extracted SALES: {data.get('customer_name', 'Unknown')}")
+            print(f"   Invoice: {data.get('invoice_number')}")
+            print(f"   Items: {len(data.get('items', []))}")
+            print(f"   Total: ₹{data.get('total_amount', 0):,.2f}")
+            
+            return {
+                "success": True,
+                "data": data
+            }
+            
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON parse error: {e}")
+            print(f"Raw response: {result_text[:200]}...")
+            return {
+                "success": False,
+                "error": "Failed to parse invoice data",
+                "raw_response": result_text
+            }
+        
+        except Exception as e:
+            print(f"❌ Extraction failed: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
     def smart_item_match(self, item_name: str, existing_items: list) -> Optional[Dict]:
         """
         Match extracted item name with existing catalog.

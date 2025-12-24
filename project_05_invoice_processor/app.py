@@ -289,11 +289,276 @@ async def save_invoice(request: Request):
         }, status_code=500)
 
 
+# ========== SALES INVOICE UPLOAD & SAVE ==========
+
+@app.post("/api/upload-sales-invoice")
+async def upload_sales_invoice(file: UploadFile = File(...)):
+    """
+    Upload and extract SALES invoice (Stock OUT).
+    
+    Flow:
+    1. Save uploaded file
+    2. AI extracts data using Gemini Vision
+    3. Match items with catalog
+    4. Calculate profit potential
+    5. Return extracted data for review
+    """
+    try:
+        # Save uploaded file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_ext = Path(file.filename).suffix
+        safe_filename = f"sales_{timestamp}{file_ext}"
+        file_path = UPLOAD_DIR / safe_filename
+        
+        # Write file
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        print(f"\n📤 Uploaded SALES: {file.filename} → {safe_filename}")
+        
+        # Extract invoice data using AI
+        result = extractor.extract_sales_invoice(str(file_path))
+        
+        if not result.get("success"):
+            return JSONResponse({
+                "success": False,
+                "error": result.get("error", "Extraction failed"),
+                "file_path": str(file_path)
+            })
+        
+        invoice_data = result["data"]
+        
+        # Get database session
+        session = get_session(engine)
+        
+        # Try to match/find customer
+        customer_name = invoice_data.get("customer_name", "").strip()
+        customer = None
+        
+        if customer_name:
+            customer = session.query(Customer).filter(
+                Customer.name.ilike(f"%{customer_name}%")
+            ).first()
+        
+        # Match items with catalog and calculate profit
+        catalog_items = session.query(Item).all()
+        catalog_list = [{"id": item.id, "name": item.name, "cost_price": item.last_cost_price} for item in catalog_items]
+        
+        total_potential_profit = 0
+        
+        for item_data in invoice_data.get("items", []):
+            matched =extractor.smart_item_match(item_data["name"], catalog_list)
+            if matched:
+                item_data["matched_item_id"] = matched["id"]
+                item_data["matched_item_name"] = matched["name"]
+                
+                # Get cost price for profit calculation
+                matched_item = next((item for item in catalog_items if item.id == matched["id"]), None)
+                if matched_item:
+                    cost_price = matched_item.last_cost_price
+                    selling_price = item_data.get("unit_price", 0)
+                    quantity = item_data.get("quantity", 0)
+                    profit = (selling_price - cost_price) * quantity
+                    
+                    item_data["cost_price"] = cost_price
+                    item_data["selling_price"] = selling_price
+                    item_data["profit_per_unit"] = selling_price - cost_price
+                    item_data["total_profit"] = profit
+                    item_data["current_stock"] = matched_item.current_stock
+                    
+                    total_potential_profit += profit
+        
+        invoice_data["total_potential_profit"] = total_potential_profit
+        
+        session.close()
+        
+        return JSONResponse({
+            "success": True,
+            "file_path": str(file_path),
+            "filename": safe_filename,
+            "data": invoice_data,
+            "customer_exists": customer is not None,
+            "customer_id": customer.id if customer else None,
+            "potential_profit": total_potential_profit
+        })
+    
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse({
+            "success": False,
+            "error": str(e)
+        }, status_code=500)
+
+
+@app.post("/api/save-sales-invoice")
+async def save_sales_invoice(request: Request):
+    """
+    Save reviewed/edited SALES invoice to database.
+    
+    Actions:
+    - Create/update customer
+    - Create sales invoice
+    - Stock OUT (reduce inventory)
+    - Calculate profit
+    - Track receivables
+    """
+    try:
+        data = await request.json()
+        session = get_session(engine)
+        
+        # 1. Get or create customer
+        customer_data = data.get("customer", {})
+        customer_name = customer_data.get("name", "").strip()
+        
+        if not customer_name:
+            raise HTTPException(400, "Customer name required")
+        
+        customer = session.query(Customer).filter(Customer.name == customer_name).first()
+        
+        if not customer:
+            # Create new customer
+            customer = Customer(
+                name=customer_name,
+                contact_person=customer_data.get("contact_person"),
+                phone=customer_data.get("phone"),
+                email=customer_data.get("email"),
+                address=customer_data.get("address"),
+                gstin=customer_data.get("gstin"),
+                credit_limit=customer_data.get("credit_limit", 0)
+            )
+            session.add(customer)
+            session.commit()
+            print(f"✅ Created new customer: {customer_name}")
+        
+        # 2. Create sales invoice
+        invoice_number = data.get("invoice_number", "").strip()
+        
+        # Check if already exists
+        existing = session.query(SalesInvoice).filter(
+            SalesInvoice.invoice_number == invoice_number
+        ).first()
+        
+        if existing:
+            raise HTTPException(400, f"Sales invoice {invoice_number} already exists!")
+        
+        invoice_date_str = data.get("invoice_date")
+        invoice_date = datetime.fromisoformat(invoice_date_str) if invoice_date_str else datetime.now()
+        
+        due_date_str = data.get("due_date")
+        due_date = datetime.fromisoformat(due_date_str) if due_date_str else (invoice_date + timedelta(days=30))
+        
+        sales_invoice = SalesInvoice(
+            customer_id=customer.id,
+            invoice_number=invoice_number,
+            invoice_date=invoice_date,
+            due_date=due_date,
+            subtotal=data.get("subtotal", 0),
+            gst_amount=data.get("gst_amount", 0),
+            total_amount=data.get("total_amount", 0),
+            total_cost=0,  # Will calculate
+            total_profit=0,  # Will calculate
+            generated_pdf_path=data.get("file_path"),
+            notes=data.get("notes", "")
+        )
+        
+        session.add(sales_invoice)
+        session.commit()
+        
+        # 3. Add line items and update stock
+        items_data = data.get("items", [])
+        total_cost = 0
+        total_profit = 0
+        
+        for item_data in items_data:
+            # Get item (must exist for sales)
+            matched_item_id = item_data.get("matched_item_id")
+            
+            if not matched_item_id:
+                # For sales, item must exist in catalog
+                raise HTTPException(400, f"Item '{item_data.get('name')}' not found in catalog. Purchase it first!")
+            
+            item = session.query(Item).get(matched_item_id)
+            
+            if not item:
+                raise HTTPException(400, f"Item ID {matched_item_id} not found!")
+            
+            quantity = item_data.get("quantity", 0)
+            
+            # Check stock availability
+            if item.current_stock < quantity:
+                raise HTTPException(400, f"Insufficient stock for '{item.name}'. Available: {item.current_stock}, Requested: {quantity}")
+            
+            # Calculate costs and profit
+            cost_price = item.last_cost_price
+            selling_price = item_data.get("unit_price", 0)
+            profit_per_unit = selling_price - cost_price
+            item_total_profit = profit_per_unit * quantity
+            item_total_cost = cost_price * quantity
+            
+            # Create sales item
+            sales_item = SalesItem(
+                invoice_id=sales_invoice.id,
+                item_id=item.id,
+                quantity=quantity,
+                unit_price=selling_price,
+                cost_price=cost_price,
+                profit_per_unit=profit_per_unit,
+                total_profit=item_total_profit,
+                subtotal=item_data.get("subtotal", 0),
+                gst_rate=item_data.get("gst_rate", 18),
+                gst_amount=item_data.get("gst_amount", 0),
+                total=item_data.get("total", 0)
+            )
+            
+            session.add(sales_item)
+            
+            # Update stock (STOCK OUT -)
+            item.current_stock -= quantity
+            print(f"   📦 Stock OUT: {item.name} (-{quantity}, {item.current_stock} left)")
+            
+            total_cost += item_total_cost
+            total_profit += item_total_profit
+        
+        # Update invoice totals
+        sales_invoice.total_cost = total_cost
+        sales_invoice.total_profit = total_profit
+        
+        session.commit()
+        
+        # Get ID before closing
+        invoice_id = sales_invoice.id
+        
+        session.close()
+        
+        print(f"✅ Saved SALES invoice: {invoice_number} ({len(items_data)} items)")
+        print(f"   💰 Profit: ₹{total_profit:,.2f}")
+        
+        return JSONResponse({
+            "success": True,
+            "message": "Sales invoice saved successfully!",
+            "invoice_id": invoice_id,
+            "invoice_number": invoice_number,
+            "profit": total_profit
+        })
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse({
+            "success": False,
+            "error": str(e)
+        }, status_code=500)
+
+
 # ========== DATA RETRIEVAL ==========
 
 @app.get("/api/invoices")
 async def get_invoices(type: str = "purchase", limit: int = 50):
-    """Get recent invoices"""
+    """Get recent invoices (purchase or sales)"""
     try:
         session = get_session(engine)
         
@@ -305,12 +570,32 @@ async def get_invoices(type: str = "purchase", limit: int = 50):
             result = [{
                 "id": inv.id,
                 "invoice_number": inv.invoice_number,
-                "supplier_name": inv.supplier.name,
+                "partner_name": inv.supplier.name,
                 "date": inv.invoice_date.isoformat(),
                 "total": inv.total_amount,
                 "payment_status": inv.payment_status.value,
-                "items_count": len(inv.items)
+                "items_count": len(inv.items),
+                "type": "purchase"
             } for inv in invoices]
+            
+        elif type == "sales":
+            invoices = session.query(SalesInvoice).order_by(
+                SalesInvoice.invoice_date.desc()
+            ).limit(limit).all()
+            
+            result = [{
+                "id": inv.id,
+                "invoice_number": inv.invoice_number,
+                "partner_name": inv.customer.name,
+                "date": inv.invoice_date.isoformat(),
+                "total": inv.total_amount,
+                "profit": inv.total_profit,
+                "payment_status": inv.payment_status.value,
+                "items_count": len(inv.items),
+                "type": "sales"
+            } for inv in invoices]
+        else:
+            result = []
         
         session.close()
         
