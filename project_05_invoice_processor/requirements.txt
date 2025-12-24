@@ -1,0 +1,29 @@
+# Backend
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart
+jinja2
+aiofiles
+
+# Database
+sqlalchemy>=2.0.0
+alembic
+
+# AI & Processing
+google-generativeai
+pillow
+pypdf
+python-magic-bin  # For Windows
+
+# PDF Generation
+reportlab
+weasyprint
+
+# Utilities
+python-dotenv
+pydantic>=2.0.0
+typing-extensions
+
+# Optional: For production
+# gunicorn
+# psycopg2-binary  # PostgreSQL
