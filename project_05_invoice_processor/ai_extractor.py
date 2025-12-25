@@ -1,114 +1,192 @@
-"""AI Invoice Extractor using Gemini Vision"""
+"""AI Invoice Extractor using Gemini - TEXT EXTRACTION APPROACH"""
 
+import json
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from dotenv import load_dotenv
-import google.generativeai as genai
-from PIL import Image
-import json
 
-# Load .env
+# Load environment
 env_path = Path(__file__).parent.parent / '.env'
 load_dotenv(env_path)
 
+# Import libraries
+import google.generativeai as genai
+from PIL import Image
+import pdfplumber
+import pytesseract
+
+# Configure Gemini
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY not found in environment variables!")
+
+genai.configure(api_key=api_key)
+
 
 class InvoiceExtractor:
-    """
-    Extract invoice data using Gemini Vision AI.
+    """Extract invoice data using TEXT extraction + Gemini LLM"""
     
-    Handles:
-    - Purchase invoices (from suppliers)
-    - Sales invoices (for reference)
-    - Multi-format (PDF, JPG, PNG)
-    """
+    def __init__(self, model_name="gemini-2.5-flash"):
+        """Initialize with Gemini model"""
+        self.model = genai.GenerativeModel(model_name)
+        print(f"✅ Initialized InvoiceExtractor with {model_name}")
     
-    def __init__(self):
-        """Initialize Gemini Vision"""
-        api_key = os.getenv("GOOGLE_API_KEY")
-        
-        if not api_key:
-            raise ValueError("GOOGLE_API_KEY not found in environment")
-        
-        genai.configure(api_key=api_key)
-        
-        # Use Gemini Pro Vision for invoice processing
-        self.model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash",
-            generation_config={
-                "temperature": 0.1,  # Low temp for accurate extraction
-                "top_p": 0.8,
-                "top_k": 40,
-            }
-        )
+    def extract_text_from_pdf(self, pdf_path: str) -> str:
+        """Extract text from PDF using pdfplumber"""
+        try:
+            text_content = []
+            with pdfplumber.open(pdf_path) as pdf:
+                for page in pdf.pages:
+                    # Extract text
+                    text = page.extract_text()
+                    if text:
+                        text_content.append(text)
+                    
+                    # Also try to extract tables
+                    tables = page.extract_tables()
+                    for table in tables:
+                        # Convert table to text
+                        for row in table:
+                            text_content.append(" | ".join([str(cell) if cell else "" for cell in row]))
+            
+            full_text = "\n".join(text_content)
+            print(f"   📄 Extracted {len(full_text)} characters from PDF")
+            return full_text
+            
+        except Exception as e:
+            print(f"   ❌ PDF extraction failed: {e}")
+            return ""
     
-    def extract_purchase_invoice(self, image_path: str) -> Dict[str, Any]:
+    def extract_text_from_image(self, image_path: str) -> str:
+        """Extract text from image using Tesseract OCR"""
+        try:
+            image = Image.open(image_path)
+            text = pytesseract.image_to_string(image)
+            print(f"   🖼️  Extracted {len(text)} characters from image via OCR")
+            return text
+            
+        except Exception as e:
+            print(f"   ❌ OCR failed: {e}")
+            print("   ℹ️  Make sure Tesseract is installed: https://github.com/tesseract-ocr/tesseract")
+            return ""
+    
+    def extract_purchase_invoice(self, file_path: str) -> Dict[str, Any]:
         """
-        Extract data from purchase invoice.
+        Extract data from PURCHASE invoice (you are buying from supplier).
+        Uses TEXT extraction + Gemini for parsing.
         
         Args:
-            image_path: Path to invoice image/PDF
+            file_path: Path to invoice file (PDF/Image)
             
         Returns:
             Dictionary with extracted invoice data
         """
-        print(f"\n📄 Processing invoice: {Path(image_path).name}")
+        print(f"\n📄 Processing PURCHASE invoice: {Path(file_path).name}")
         
-        # Check file type
-        file_path = Path(image_path)
-        file_ext = file_path.suffix.lower()
+        # Step 1: Extract text from file
+        file_ext = Path(file_path).suffix.lower()
         
-        # Load file based on type
+        if file_ext == '.pdf':
+            print("   📑 Extracting text from PDF...")
+            invoice_text = self.extract_text_from_pdf(file_path)
+        else:
+            print("   🖼️  Extracting text from image via OCR...")
+            invoice_text = self.extract_text_from_image(file_path)
+        
+        if not invoice_text or len(invoice_text) < 50:
+            return {
+                "success": False,
+                "error": "Could not extract sufficient text from invoice"
+            }
+        
+        # Step 2: Send text to Gemini for structured parsing
         try:
-            if file_ext == '.pdf':
-                # For PDFs, we'll use Part with inline_data
-                print("   📑 Processing PDF file...")
-                with open(file_path, 'rb') as f:
-                    pdf_data = f.read()
-                
-                # Create Part object for PDF
-                from google.generativeai.types import content_types
-                file_input = {
-                    "mime_type": "application/pdf",
-                    "data": pdf_data
-                }
-            else:
-                # For images (JPG, PNG), use PIL
-                print("   🖼️  Processing image file...")
-                image = Image.open(image_path)
-                file_input = image
-                
+            response = self._parse_purchase_invoice_text(invoice_text)
+            return response
+            
         except Exception as e:
-            return {"success": False, "error": f"Failed to load file: {e}"}
+            print(f"❌ Parsing failed: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    def extract_sales_invoice(self, file_path: str) -> Dict[str, Any]:
+        """
+        Extract data from SALES invoice (you are selling to customer).
+        Uses TEXT extraction + Gemini for parsing.
         
-        # Create detailed prompt for hardware distributor invoices
-        prompt = """Extract ALL data from this purchase invoice. This is for a HARDWARE DISTRIBUTOR business.
+        Args:
+            file_path: Path to invoice file (PDF/Image)
+            
+        Returns:
+            Dictionary with extracted invoice data
+        """
+        print(f"\n📄 Processing SALES invoice: {Path(file_path).name}")
+        
+        # Step 1: Extract text from file
+        file_ext = Path(file_path).suffix.lower()
+        
+        if file_ext == '.pdf':
+            print("   📑 Extracting text from PDF...")
+            invoice_text = self.extract_text_from_pdf(file_path)
+        else:
+            print("   🖼️  Extracting text from image via OCR...")
+            invoice_text = self.extract_text_from_image(file_path)
+        
+        if not invoice_text or len(invoice_text) < 50:
+            return {
+                "success": False,
+                "error": "Could not extract sufficient text from invoice"
+            }
+        
+        # Step 2: Send text to Gemini for structured parsing
+        try:
+            response = self._parse_sales_invoice_text(invoice_text)
+            return response
+            
+        except Exception as e:
+            print(f"❌ Parsing failed: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    def _parse_purchase_invoice_text(self, invoice_text: str) -> Dict[str, Any]:
+        """Parse extracted text into structured purchase invoice data using Gemini"""
+        
+        prompt = f"""You are an expert invoice parser. Extract data from this PURCHASE invoice text.
+This is an invoice where a BUSINESS is BUYING from a SUPPLIER.
 
 **CRITICAL: Return ONLY valid JSON, no markdown, no explanations.**
 
+Invoice Text:
+{invoice_text}
+
 Extract the following in this EXACT JSON format:
 
-{
-  "supplier_name": "Company name",
+{{
+  "supplier_name": "Supplier/vendor name",
   "invoice_number": "Invoice/bill number",
   "invoice_date": "Date (YYYY-MM-DD format)",
   "due_date": "Payment due date (YYYY-MM-DD) or null",
-  "supplier_gstin": "GST number if present",
-  "supplier_address": "Full address",
+  "supplier_gstin": "Supplier GST number if present",
+  "supplier_address": "Supplier address",
   "supplier_contact": "Phone/email if present",
   
   "items": [
-    {
+    {{
       "name": "Item/product name",
       "description": "Additional details if any",
       "hsn_code": "HSN/SAC code if present",
       "quantity": float (just number),
       "unit": "piece/box/kg/etc",
-      "unit_price": float (price per unit before GST),
+      "unit_price": float (unit price before GST),
       "gst_rate": float (GST % like 18, 12, 5),
       "gst_amount": float,
       "total": float (final amount for this item)
-    }
+    }}
   ],
   
   "subtotal": float (total before GST),
@@ -116,102 +194,52 @@ Extract the following in this EXACT JSON format:
   "total_amount": float (grand total),
   "payment_terms": "Net 30 days or similar",
   
-  "raw_text": "Any other important information from invoice"
-}
+  "raw_text": "Any other important information"
+}}
 
-IMPORTANT RULES:
-- Return ONLY the JSON object, nothing else
+RULES:
+- Return ONLY JSON
 - All amounts must be numbers (float), not strings
 - If a field is not found, use null
-- For items, extract ALL line items
-- Be precise with numbers and calculations
-- Common hardware items: bolts, screws, tools, nails, wires, pipes, etc.
-"""
+- Extract ALL line items
+- Be precise with numbers"""
+
+        response = self.model.generate_content(prompt)
+        result_text = response.text.strip()
         
-        try:
-            # Send to Gemini Vision
-            response = self.model.generate_content([prompt, file_input])
-            result_text = response.text.strip()
-            
-            # Clean response (remove markdown if present)
-            if result_text.startswith("```json"):
-                result_text = result_text.replace("```json", "").replace("```", "").strip()
-            elif result_text.startswith("```"):
-                result_text = result_text.replace("```", "").strip()
-            
-            # Parse JSON
-            data = json.loads(result_text)
-            
-            print(f"✅ Extracted: {data.get('supplier_name', 'Unknown')}")
-            print(f"   Invoice: {data.get('invoice_number')}")
-            print(f"   Items: {len(data.get('items', []))}")
-            print(f"   Total: ₹{data.get('total_amount', 0):,.2f}")
-            
-            return {
-                "success": True,
-                "data": data
-            }
-            
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON parse error: {e}")
-            print(f"Raw response: {result_text[:200]}...")
-            return {
-                "success": False,
-                "error": "Failed to parse invoice data",
-                "raw_response": result_text
-            }
+        # Clean response
+        if result_text.startswith("```json"):
+            result_text = result_text.replace("```json", "").replace("```", "").strip()
+        elif result_text.startswith("```"):
+            result_text = result_text.replace("```", "").strip()
         
-        except Exception as e:
-            print(f"❌ Extraction failed: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+        # Parse JSON
+        data = json.loads(result_text)
+        
+        print(f"✅ Extracted PURCHASE: {data.get('supplier_name', 'Unknown')}")
+        print(f"   Invoice: {data.get('invoice_number')}")
+        print(f"   Items: {len(data.get('items', []))}")
+        print(f"   Total: ₹{data.get('total_amount', 0):,.2f}")
+        
+        return {
+            "success": True,
+            "data": data
+        }
     
-    def extract_sales_invoice(self, image_path: str) -> Dict[str, Any]:
-        """
-        Extract data from SALES invoice (you are the seller).
+    def _parse_sales_invoice_text(self, invoice_text: str) -> Dict[str, Any]:
+        """Parse extracted text into structured sales invoice data using Gemini"""
         
-        Args:
-            image_path: Path to invoice image/PDF
-            
-        Returns:
-            Dictionary with extracted invoice data
-        """
-        print(f"\n📄 Processing SALES invoice: {Path(image_path).name}")
-        
-        # Check file type
-        file_path = Path(image_path)
-        file_ext = file_path.suffix.lower()
-        
-        # Load file based on type
-        try:
-            if file_ext == '.pdf':
-                print("   📑 Processing PDF file...")
-                with open(file_path, 'rb') as f:
-                    pdf_data = f.read()
-                
-                from google.generativeai.types import content_types
-                file_input = {
-                    "mime_type": "application/pdf",
-                    "data": pdf_data
-                }
-            else:
-                print("   🖼️  Processing image file...")
-                image = Image.open(image_path)
-                file_input = image
-                
-        except Exception as e:
-            return {"success": False, "error": f"Failed to load file: {e}"}
-        
-        # Create detailed prompt for SALES invoices
-        prompt = """Extract ALL data from this SALES invoice. This is an invoice where YOU (the business) are SELLING to a CUSTOMER.
+        prompt = f"""You are an expert invoice parser. Extract data from this SALES invoice text.
+This is an invoice where a BUSINESS is SELLING to a CUSTOMER.
 
 **CRITICAL: Return ONLY valid JSON, no markdown, no explanations.**
 
+Invoice Text:
+{invoice_text}
+
 Extract the following in this EXACT JSON format:
 
-{
+{{
   "customer_name": "Customer/buyer name",
   "invoice_number": "Invoice/bill number",
   "invoice_date": "Date (YYYY-MM-DD format)",
@@ -221,7 +249,7 @@ Extract the following in this EXACT JSON format:
   "customer_contact": "Phone/email if present",
   
   "items": [
-    {
+    {{
       "name": "Item/product name",
       "description": "Additional details if any",
       "hsn_code": "HSN/SAC code if present",
@@ -231,7 +259,7 @@ Extract the following in this EXACT JSON format:
       "gst_rate": float (GST % like 18, 12, 5),
       "gst_amount": float,
       "total": float (final amount for this item)
-    }
+    }}
   ],
   
   "subtotal": float (total before GST),
@@ -239,129 +267,55 @@ Extract the following in this EXACT JSON format:
   "total_amount": float (grand total),
   "payment_terms": "Net 30 days or similar",
   
-  "raw_text": "Any other important information from invoice"
-}
+  "raw_text": "Any other important information"
+}}
 
-IMPORTANT RULES:
-- Return ONLY the JSON object, nothing else
+RULES:
+- Return ONLY JSON
 - All amounts must be numbers (float), not strings
 - If a field is not found, use null
-- For items, extract ALL line items
-- Be precise with numbers and calculations
-- This is a SALES invoice (you are selling TO the customer)
-"""
+- Extract ALL line items
+- Be precise with numbers
+- This is a SALES invoice (you are selling TO the customer)"""
+
+        response = self.model.generate_content(prompt)
+        result_text = response.text.strip()
         
-        try:
-            # Send to Gemini Vision
-            response = self.model.generate_content([prompt, file_input])
-            result_text = response.text.strip()
-            
-            # Clean response
-            if result_text.startswith("```json"):
-                result_text = result_text.replace("```json", "").replace("```", "").strip()
-            elif result_text.startswith("```"):
-                result_text = result_text.replace("```", "").strip()
-            
-            # Parse JSON
-            data = json.loads(result_text)
-            
-            print(f"✅ Extracted SALES: {data.get('customer_name', 'Unknown')}")
-            print(f"   Invoice: {data.get('invoice_number')}")
-            print(f"   Items: {len(data.get('items', []))}")
-            print(f"   Total: ₹{data.get('total_amount', 0):,.2f}")
-            
-            return {
-                "success": True,
-                "data": data
-            }
-            
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON parse error: {e}")
-            print(f"Raw response: {result_text[:200]}...")
-            return {
-                "success": False,
-                "error": "Failed to parse invoice data",
-                "raw_response": result_text
-            }
+        # Clean response
+        if result_text.startswith("```json"):
+            result_text = result_text.replace("```json", "").replace("```", "").strip()
+        elif result_text.startswith("```"):
+            result_text = result_text.replace("```", "").strip()
         
-        except Exception as e:
-            print(f"❌ Extraction failed: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+        # Parse JSON
+        data = json.loads(result_text)
+        
+        print(f"✅ Extracted SALES: {data.get('customer_name', 'Unknown')}")
+        print(f"   Invoice: {data.get('invoice_number')}")
+        print(f"   Items: {len(data.get('items', []))}")
+        print(f"   Total: ₹{data.get('total_amount', 0):,.2f}")
+        
+        return {
+            "success": True,
+            "data": data
+        }
     
     def smart_item_match(self, item_name: str, existing_items: list) -> Optional[Dict]:
         """
-        Match extracted item name with existing catalog.
+        Match extracted item name with existing catalog (DISABLED for quota).
         
-        Uses AI to recognize item variations:
-        - "M.S. Bolt 10mm" = "Mild Steel Bolt 10mm"
-        - "Screwdriver Set 10pc" = "Screwdriver Set (10 pieces)"
-        
-        Args:
-            item_name: Name from invoice
-            existing_items: List of {id, name, description} from database
-            
-        Returns:
-            Matched item dict or None
+        Simple exact matching used instead.
         """
-        if not existing_items:
-            return None
-        
-        # Build catalog for AI
-        catalog_text = "\n".join([
-            f"{item['id']}: {item['name']}" 
-            for item in existing_items[:50]  # Limit to prevent token overflow
-        ])
-        
-        prompt = f"""Match this item from an invoice to the most similar item in our catalog.
-
-Invoice Item: "{item_name}"
-
-Our Catalog:
-{catalog_text}
-
-If you find a match, respond with ONLY the item ID number.
-If NO match, respond with: NONE
-
-Consider variations like:
-- M.S. = Mild Steel
-- SS = Stainless Steel  
-- Different units (box/piece/kg)
-- Similar product names
-
-Response (just number or NONE):"""
-        
-        try:
-            response = self.model.generate_content(prompt)
-            result = response.text.strip()
-            
-            if result == "NONE":
-                return None
-            
-            # Extract ID
-            item_id = int(result)
-            matched_item = next((item for item in existing_items if item['id'] == item_id), None)
-            
-            if matched_item:
-                print(f"   🔗 Matched '{item_name}' → {matched_item['name']}")
-            
-            return matched_item
-            
-        except Exception as e:
-            print(f"   ⚠️  Match failed: {e}")
-            return None
+        # Simple exact match
+        item_lower = item_name.strip().lower()
+        for item in existing_items:
+            if item["name"].strip().lower() == item_lower:
+                return item
+        return None
 
 
-# Global instance
+# Create global instance
 extractor = InvoiceExtractor()
 
-
-# Test function
 if __name__ == "__main__":
-    print("🧪 Testing Invoice Extractor...")
-    
-    # This would test with a sample invoice
-    # result = extractor.extract_purchase_invoice("sample_invoice.jpg")
-    # print(json.dumps(result, indent=2))
+    print("InvoiceExtractor initialized successfully!")

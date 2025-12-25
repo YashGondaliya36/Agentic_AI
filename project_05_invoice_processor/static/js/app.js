@@ -50,6 +50,8 @@ function setupNavigation() {
                 loadInvoices(currentInvoiceFilter);
             } else if (viewName === 'inventory') {
                 loadInventory();
+            } else if (viewName === 'analytics') {
+                loadAnalytics();
             }
         });
     });
@@ -692,6 +694,111 @@ function displayInventory(items) {
             </table>
         </div>
     `;
+}
+
+// ========== Analytics ==========
+async function loadAnalytics() {
+    try {
+        // Load comprehensive analytics
+        const response = await fetch('/api/analytics/dashboard');
+        const data = await response.json();
+
+        if (data.success) {
+            displayAnalytics(data.analytics);
+        }
+
+        // Load low stock separately
+        loadLowStock();
+    } catch (error) {
+        console.error('Failed to load analytics:', error);
+    }
+}
+
+function displayAnalytics(analytics) {
+    // Overview stats
+    document.getElementById('analytics-total-sales').textContent = `₹${formatNumber(analytics.overview.total_sales)}`;
+    document.getElementById('analytics-total-profit').textContent = `₹${formatNumber(analytics.overview.total_profit)}`;
+    document.getElementById('analytics-margin').textContent = `${formatNumber(analytics.overview.profit_margin)}%`;
+    document.getElementById('analytics-stock-value').textContent = `₹${formatNumber(analytics.overview.stock_value)}`;
+
+    // Cash flow
+    document.getElementById('analytics-receivables').textContent = `₹${formatNumber(analytics.cash_flow.pending_receivables)}`;
+    document.getElementById('analytics-payables').textContent = `₹${formatNumber(analytics.cash_flow.pending_payables)}`;
+    const netCash = analytics.cash_flow.net_cash;
+    const netCashEl = document.getElementById('analytics-net-cash');
+    netCashEl.textContent = `₹${formatNumber(netCash)}`;
+    netCashEl.style.color = netCash >= 0 ? 'var(--success)' : 'var(--error)';
+
+    // Top items
+    const topItemsBody = document.getElementById('analytics-top-items');
+    if (analytics.top_items.length > 0) {
+        topItemsBody.innerHTML = analytics.top_items.map(item => `
+            <tr>
+                <td><strong>${item.name}</strong></td>
+                <td>${formatNumber(item.qty_sold)}</td>
+                <td style="color: var(--success);">₹${formatNumber(item.profit)}</td>
+            </tr>
+        `).join('');
+    } else {
+        topItemsBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No sales data yet</td></tr>';
+    }
+
+    // Top suppliers
+    const suppliersDiv = document.getElementById('analytics-top-suppliers');
+    if (analytics.top_suppliers.length > 0) {
+        suppliersDiv.innerHTML = analytics.top_suppliers.map((s, i) => `
+            <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between;">
+                    <span><strong>${i + 1}. ${s.name}</strong></span>
+                    <span style="color: var(--primary);">₹${formatNumber(s.total)}</span>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        suppliersDiv.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No suppliers yet</p>';
+    }
+
+    // Top customers
+    const customersDiv = document.getElementById('analytics-top-customers');
+    if (analytics.top_customers.length > 0) {
+        customersDiv.innerHTML = analytics.top_customers.map((c, i) => `
+            <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between;">
+                    <span><strong>${i + 1}. ${c.name}</strong></span>
+                    <span style="color: var(--success);">₹${formatNumber(c.total)}</span>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        customersDiv.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No customers yet</p>';
+    }
+}
+
+async function loadLowStock() {
+    try {
+        const response = await fetch('/api/analytics/low-stock');
+        const data = await response.json();
+
+        if (data.success) {
+            const tbody = document.getElementById('analytics-low-stock');
+
+            if (data.low_stock_items.length > 0) {
+                tbody.innerHTML = data.low_stock_items.map(item => `
+                    <tr>
+                        <td><strong>${item.name}</strong></td>
+                        <td style="color: var(--error);">${formatNumber(item.current_stock)}</td>
+                        <td>${formatNumber(item.min_level)}</td>
+                        <td style="color: var(--error);">${formatNumber(item.shortage)}</td>
+                        <td>₹${formatNumber(item.reorder_value)}</td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--success);">✅ All items have sufficient stock!</td></tr>';
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load low stock:', error);
+    }
 }
 
 // ========== Utilities ==========

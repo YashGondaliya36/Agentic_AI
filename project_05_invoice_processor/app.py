@@ -31,6 +31,7 @@ from models import (
     PaymentStatus
 )
 from ai_extractor import extractor
+from analytics import router as analytics_router
 
 # Initialize FastAPI
 app = FastAPI(title="InvoiceIQ - AI Invoice Processor", version="1.0.0")
@@ -43,6 +44,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include analytics router
+app.include_router(analytics_router)
 
 # Static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -484,17 +488,39 @@ async def save_sales_invoice(request: Request):
         total_profit = 0
         
         for item_data in items_data:
-            # Get item (must exist for sales)
+            # Get or create item
             matched_item_id = item_data.get("matched_item_id")
             
-            if not matched_item_id:
-                # For sales, item must exist in catalog
-                raise HTTPException(400, f"Item '{item_data.get('name')}' not found in catalog. Purchase it first!")
-            
-            item = session.query(Item).get(matched_item_id)
-            
-            if not item:
-                raise HTTPException(400, f"Item ID {matched_item_id} not found!")
+            if matched_item_id:
+                # Item exists, use it
+                item = session.query(Item).get(matched_item_id)
+                if not item:
+                    raise HTTPException(400, f"Item ID {matched_item_id} not found!")
+            else:
+                # Item doesn't exist - CREATE IT with default stock
+                # This allows selling before purchasing (useful for manual entry)
+                item_name = item_data.get("name", "").strip()
+                
+                # Check if it exists by name
+                item = session.query(Item).filter(Item.name.ilike(item_name)).first()
+                
+                if not item:
+                    # Create new item with selling price as cost (no profit data yet)
+                    selling_price = item_data.get("unit_price", 0)
+                    item = Item(
+                        name=item_name,
+                        description=item_data.get("description"),
+                        hsn_code=item_data.get("hsn_code"),
+                        unit=item_data.get("unit", "piece"),
+                        current_stock=999,  # Default high stock (should be updated via purchase)
+                        min_stock_level=10,
+                        last_cost_price=selling_price,  # Assume selling price = cost (update via purchase)
+                        default_selling_price=selling_price,
+                        gst_rate=item_data.get("gst_rate", 18)
+                    )
+                    session.add(item)
+                    session.commit()
+                    print(f"   ⚠️  Created new item during sales: {item_name} (default stock: 999)")
             
             quantity = item_data.get("quantity", 0)
             

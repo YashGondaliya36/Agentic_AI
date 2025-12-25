@@ -278,9 +278,126 @@
 
             <!-- Analytics View -->
             <div class="view" id="view-analytics">
-                <h2 class="section-title">Analytics</h2>
-                <div class="analytics-content">
-                    <p class="placeholder-text">📊 Analytics dashboard coming soon...</p>
+                <h2 class="section-title">Business Analytics</h2>
+
+                <!-- Enhanced Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-info">
+                            <p class="stat-label">Total Sales</p>
+                            <h3 class="stat-value" id="analytics-total-sales">₹0</h3>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <p class="stat-label">Total Profit</p>
+                            <h3 class="stat-value" id="analytics-total-profit" style="color: var(--success);">₹0</h3>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-info">
+                            <p class="stat-label">Profit Margin</p>
+                            <h3 class="stat-value" id="analytics-margin">0%</h3>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">💵</div>
+                        <div class="stat-info">
+                            <p class="stat-label">Stock Value</p>
+                            <h3 class="stat-value" id="analytics-stock-value">₹0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cash Flow -->
+                <div class="review-card" style="margin-top: 2rem;">
+                    <h3 class="review-card-title">💸 Cash Flow</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <p class="stat-label">Receivables (Pending)</p>
+                            <h4 id="analytics-receivables" style="color: var(--success);">₹0</h4>
+                        </div>
+                        <div class="stat-box">
+                            <p class="stat-label">Payables (Pending)</p>
+                            <h4 id="analytics-payables" style="color: var(--error);">₹0</h4>
+                        </div>
+                        <div class="stat-box">
+                            <p class="stat-label">Net Cash Position</p>
+                            <h4 id="analytics-net-cash">₹0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Items -->
+                <div class="review-card" style="margin-top: 2rem;">
+                    <h3 class="review-card-title">🏆 Top Selling Items</h3>
+                    <div class="table-container">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Qty Sold</th>
+                                    <th>Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analytics-top-items">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: var(--text-muted);">Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top Suppliers & Customers -->
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <!-- Top Suppliers -->
+                    <div class="review-card">
+                        <h3 class="review-card-title">🏢 Top Suppliers</h3>
+                        <div id="analytics-top-suppliers">
+                            <p style="text-align: center; color: var(--text-muted);">Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Top Customers -->
+                    <div class="review-card">
+                        <h3 class="review-card-title">👥 Top Customers</h3>
+                        <div id="analytics-top-customers">
+                            <p style="text-align: center; color: var(--text-muted);">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Low Stock Alerts -->
+                <div class="review-card" style="margin-top: 2rem;">
+                    <h3 class="review-card-title">⚠️ Low Stock Alerts</h3>
+                    <div class="table-container">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Current</th>
+                                    <th>Min Level</th>
+                                    <th>Shortage</th>
+                                    <th>Reorder Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analytics-low-stock">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-muted);">Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

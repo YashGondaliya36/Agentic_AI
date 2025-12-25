@@ -13,6 +13,8 @@ alembic
 google-generativeai
 pillow
 pypdf
+pdfplumber  # Better PDF text extraction
+pytesseract  # OCR for images
 python-magic-bin  # For Windows
 
 # PDF Generation
