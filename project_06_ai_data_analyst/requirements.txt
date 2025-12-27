@@ -1,0 +1,25 @@
+# Web Framework
+fastapi
+uvicorn
+python-multipart
+jinja2
+
+# AI & LangChain
+google-generativeai
+langchain
+langchain-google-genai
+langgraph
+
+# Data Analysis
+pandas
+numpy
+openpyxl
+
+# Visualization
+matplotlib
+seaborn 
+plotly
+
+# Utilities
+python-dotenv
+aiofiles
