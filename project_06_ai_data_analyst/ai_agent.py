@@ -1,5 +1,5 @@
 """
-AI Data Analyst Agent
+AI Data Analyst Agent with Automated Insights
 Uses Google Gemini to write and execute Python code for data analysis
 """
 
@@ -29,7 +29,7 @@ class DataAnalystAgent:
     """AI Agent that analyzes data by writing and executing Python code"""
     
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
         self.conversation_history = []
         self.current_dataframe = None
         self.df_info = None
@@ -46,12 +46,17 @@ class DataAnalystAgent:
             else:
                 return {"success": False, "error": "Unsupported file format"}
             
+            # Convert datetime columns to strings for JSON serialization
+            df_preview = self.current_dataframe.head(5).copy()
+            for col in df_preview.select_dtypes(include=['datetime64', 'datetime']).columns:
+                df_preview[col] = df_preview[col].astype(str)
+            
             # Get dataframe info
             self.df_info = {
                 "columns": list(self.current_dataframe.columns),
                 "shape": self.current_dataframe.shape,
                 "dtypes": {col: str(dtype) for col, dtype in self.current_dataframe.dtypes.items()},
-                "preview": self.current_dataframe.head(5).to_dict(orient='records')
+                "preview": df_preview.to_dict(orient='records')
             }
             
             return {
@@ -228,3 +233,168 @@ Keep it conversational and easy to understand. Maximum 3-4 sentences.
             if data:
                 return f"Analysis complete. Result: {data}"
             return "Analysis completed successfully. Check the visualization for details."
+    
+    def generate_automated_insights(self) -> Dict[str, Any]:
+        """Generate automated insights from data summary (minimal tokens)"""
+        
+        if self.current_dataframe is None:
+            return {
+                "success": False,
+                "error": "No data loaded"
+            }
+        
+        try:
+            # Step 1: Calculate summary statistics locally (NO AI, NO TOKENS!)
+            summary = self._calculate_summary_stats()
+            
+            # Step 2: Send ONLY summary to AI (minimal tokens ~300)
+            insights = self._generate_insights_from_summary(summary)
+            
+            return {
+                "success": True,
+                "insights": insights,
+                "summary": summary
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Insight generation failed: {str(e)}"
+            }
+    
+    def _calculate_summary_stats(self) -> Dict[str, Any]:
+        """Calculate summary statistics locally - NO AI tokens used"""
+        
+        df = self.current_dataframe
+        summary = {
+            "dataset_info": {
+                "total_rows": len(df),
+                "total_columns": len(df.columns),
+                "columns": list(df.columns)
+            },
+            "numeric_columns": {},
+            "categorical_columns": {},
+            "missing_values": {},
+            "correlations": {}
+        }
+        
+        # Analyze numeric columns
+        numeric_cols = df.select_dtypes(include=['number']).columns
+        for col in numeric_cols:
+            summary["numeric_columns"][col] = {
+                "min": float(df[col].min()),
+                "max": float(df[col].max()),
+                "mean": float(df[col].mean()),
+                "median": float(df[col].median()),
+                "std": float(df[col].std()) if len(df) > 1 else 0,
+                "unique_count": int(df[col].nunique())
+            }
+        
+        # Analyze categorical columns (top 10 values only)
+        categorical_cols = df.select_dtypes(include=['object', 'category']).columns
+        for col in categorical_cols:
+            value_counts = df[col].value_counts().head(10)
+            summary["categorical_columns"][col] = {
+                "unique_count": int(df[col].nunique()),
+                "top_values": {str(k): int(v) for k, v in value_counts.items()},
+                "most_common": str(df[col].mode()[0]) if len(df[col].mode()) > 0 else None
+            }
+        
+        # Missing values
+        missing = df.isnull().sum()
+        summary["missing_values"] = {
+            col: int(count) for col, count in missing.items() if count > 0
+        }
+        
+        # Correlations (only if numeric columns exist)
+        if len(numeric_cols) > 1:
+            corr_matrix = df[numeric_cols].corr()
+            # Get strongest correlations (excluding diagonal)
+            strong_corr = []
+            for i in range(len(corr_matrix.columns)):
+                for j in range(i+1, len(corr_matrix.columns)):
+                    corr_val = corr_matrix.iloc[i, j]
+                    if abs(corr_val) > 0.5:  # Only strong correlations
+                        strong_corr.append({
+                            "col1": corr_matrix.columns[i],
+                            "col2": corr_matrix.columns[j],
+                            "correlation": round(float(corr_val), 3)
+                        })
+            summary["correlations"] = strong_corr[:10]  # Top 10 only
+        
+        return summary
+    
+    def _generate_insights_from_summary(self, summary: Dict) -> List[Dict[str, str]]:
+        """Generate insights from summary statistics using AI (minimal tokens)"""
+        
+        prompt = f"""You are a data analyst providing automated insights.
+
+Analyze this dataset summary and provide 5-7 key insights:
+
+Dataset Summary:
+{json.dumps(summary, indent=2)}
+
+For each insight, provide:
+1. A clear, actionable finding
+2. Category: "warning", "success", "info", or "neutral"
+3. Priority: "high", "medium", "low"
+
+Format as JSON array:
+[
+  {{"text": "X% of data has missing values in column Y - data quality issue", "category": "warning", "priority": "high"}},
+  {{"text": "Strong correlation (0.85) between A and B suggests relationship", "category": "success", "priority": "medium"}}
+]
+
+RULES:
+- Be specific with numbers
+- Highlight data quality issues
+- Point out interesting patterns
+- Suggest areas to investigate
+- Keep each insight to 1-2 sentences
+- Maximum 7 insights total
+"""
+
+        try:
+            response = self.model.generate_content(prompt)
+            text = response.text.strip()
+            
+            # Clean JSON from markdown if present
+            if text.startswith("```json"):
+                text = text.split("```json")[1].split("```")[0].strip()
+            elif text.startswith("```"):
+                text = text.split("```")[1].split("```")[0].strip()
+            
+            insights = json.loads(text)
+            return insights
+            
+        except Exception as e:
+            # Fallback: Generate basic insights from summary
+            insights = []
+            
+            # Data size insight
+            total_rows = summary["dataset_info"]["total_rows"]
+            insights.append({
+                "text": f"Dataset contains {total_rows:,} rows and {summary['dataset_info']['total_columns']} columns",
+                "category": "info",
+                "priority": "low"
+            })
+            
+            # Missing values insight
+            if summary["missing_values"]:
+                total_missing = sum(summary["missing_values"].values())
+                insights.append({
+                    "text": f"⚠️ Found {total_missing:,} missing values across {len(summary['missing_values'])} columns - data quality issue",
+                    "category": "warning",
+                    "priority": "high"
+                })
+            
+            # Correlations insight
+            if summary["correlations"]:
+                top_corr = summary["correlations"][0]
+                insights.append({
+                    "text": f"Strong correlation ({top_corr['correlation']}) between {top_corr['col1']} and {top_corr['col2']}",
+                    "category": "success",
+                    "priority": "medium"
+                })
+            
+            return insights
