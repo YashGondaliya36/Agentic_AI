@@ -121,18 +121,30 @@ Dataset Information:
 
 User Question: {question}
 
-IMPORTANT RULES:
-1. The dataframe is already loaded as variable 'df'
-2. Use ONLY Plotly for visualizations (plotly.express or plotly.graph_objects)
-3. For visualizations, save to 'outputs/chart.html' using fig.write_html()
-4. Return results as a dictionary with key 'result'
-5. Keep code simple and efficient
-6. Handle missing values appropriately
-7. DO NOT use plt, matplotlib, or seaborn
-8. DO NOT read the file again, use the existing 'df' variable
+CRITICAL RULES - FOLLOW STRICTLY:
+1. Variable 'df' is ALREADY LOADED - DO NOT create or check for its existence
+2. DO NOT use try-except blocks to check if 'df' exists
+3. DO NOT create dummy/sample data or hardcoded DataFrames
+4. NEVER use: try: df except NameError: ...
+5. START your code directly using 'df' - it is guaranteed to exist
+6. Use ONLY Plotly for visualizations (plotly.express or plotly.graph_objects)
+7. For visualizations, save to 'outputs/chart.html' using fig.write_html()
+8. Return results as a dictionary with key 'result'
+9. DO NOT use matplotlib, seaborn, or any other plotting library
+10. Use ALL rows from the dataframe - do not limit unless specifically asked
 
-Generate ONLY executable Python code, no explanations.
-Format: Pure Python code block without markdown backticks.
+CORRECT EXAMPLE:
+# Filter data directly - df already exists!
+df_left = df[df['left'] == 1]
+result = df_left['salary'].value_counts()
+
+WRONG - NEVER DO THIS:
+try:
+    df
+except NameError:
+    df = pd.DataFrame([...])  # NEVER CREATE DUMMY DATA!
+
+Generate ONLY executable Python code, no explanations or markdown.
 """
 
         try:
