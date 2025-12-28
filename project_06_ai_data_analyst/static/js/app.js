@@ -15,6 +15,10 @@ const askBtn = document.getElementById('askBtn');
 const messages = document.getElementById('messages');
 const loading = document.getElementById('loading');
 const resetBtn = document.getElementById('resetBtn');
+const insightsBtn = document.getElementById('insightsBtn');
+const insightsSection = document.getElementById('insightsSection');
+const insightsLoading = document.getElementById('insightsLoading');
+const insightsContainer = document.getElementById('insightsContainer');
 
 // Upload Area Click
 uploadArea.addEventListener('click', () => {
@@ -70,6 +74,11 @@ resetBtn.addEventListener('click', async () => {
     if (confirm('Are you sure you want to reset? This will clear all data and history.')) {
         await resetSession();
     }
+});
+
+// Insights Button Click
+insightsBtn.addEventListener('click', async () => {
+    await getInsights();
 });
 
 // Handle File Upload
@@ -133,6 +142,7 @@ function displayFileInfo(data) {
     `;
 
     fileInfo.classList.add('show');
+    insightsBtn.style.display = 'inline-flex';
 }
 
 // Ask Question
@@ -260,7 +270,10 @@ async function resetSession() {
         currentFile = null;
         fileInfo.classList.remove('show');
         chatSection.classList.remove('show');
+        insightsSection.classList.remove('show');
+        insightsBtn.style.display = 'none';
         messages.innerHTML = '';
+        insightsContainer.innerHTML = '';
         questionInput.value = '';
         fileInput.value = '';
 
@@ -292,6 +305,84 @@ function showSuccess(message) {
     setTimeout(() => {
         successDiv.remove();
     }, 3000);
+}
+
+// Get Insights
+async function getInsights() {
+    if (!currentFile) {
+        showError('Please upload a file first.');
+        return;
+    }
+
+    // Show insights section and loading
+    insightsSection.classList.add('show');
+    insightsLoading.classList.add('show');
+    insightsContainer.innerHTML = '';
+
+    try {
+        const response = await fetch('/api/insights');
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || 'Failed to generate insights');
+        }
+
+        // Display insights
+        displayInsights(data.insights);
+
+    } catch (error) {
+        showError(error.message);
+        insightsContainer.innerHTML = `
+            <div class="insight-item error">
+                <p>❌ Failed to generate insights: ${error.message}</p>
+            </div>
+        `;
+    } finally {
+        insightsLoading.classList.remove('show');
+    }
+}
+
+// Display Insights
+function displayInsights(insights) {
+    if (!insights || insights.length === 0) {
+        insightsContainer.innerHTML = `
+            <div class="insight-item">
+                <p>No significant insights found.</p>
+            </div>
+        `;
+        return;
+    }
+
+    insightsContainer.innerHTML = '';
+
+    insights.forEach(insight => {
+        const insightDiv = document.createElement('div');
+        insightDiv.className = `insight-item ${insight.category || 'neutral'}`;
+
+        // Icon based on category
+        const icons = {
+            warning: '⚠️',
+            error: '❌',
+            success: '✅',
+            info: 'ℹ️',
+            neutral: '💡'
+        };
+
+        const icon = icons[insight.category] || icons.neutral;
+        const priority = insight.priority || 'medium';
+
+        insightDiv.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                <span style="font-size: 1.5rem;">${icon}</span>
+                <div style="flex: 1;">
+                    <p style="margin: 0; line-height: 1.6;">${escapeHtml(insight.text)}</p>
+                    ${priority === 'high' ? '<span style="font-size: 0.8rem; color: var(--error); font-weight: 600; text-transform: uppercase;">High Priority</span>' : ''}
+                </div>
+            </div>
+        `;
+
+        insightsContainer.appendChild(insightDiv);
+    });
 }
 
 // Escape HTML

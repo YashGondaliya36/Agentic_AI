@@ -10,8 +10,6 @@ venv/
 *.egg-info/
 
 # Environment
-.env
-.env.local
 
 # Uploads & Outputs
 uploads/*

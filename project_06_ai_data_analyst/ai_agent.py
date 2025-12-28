@@ -15,10 +15,10 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv(Path(__file__).parent.parent.parent / ".env")
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 # Configure Gemini
-GOOGLE_API_KEY = "AIzaSyBwrU5EUs1DLPTz6iWZZ7avpNIZOWUaamA"
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
     raise ValueError("GOOGLE_API_KEY not found in environment variables")
 
@@ -29,7 +29,7 @@ class DataAnalystAgent:
     """AI Agent that analyzes data by writing and executing Python code"""
     
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
         self.conversation_history = []
         self.current_dataframe = None
         self.df_info = None

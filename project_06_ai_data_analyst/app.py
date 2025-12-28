@@ -145,6 +145,34 @@ async def get_chart():
     return FileResponse(chart_path)
 
 
+@app.get("/api/insights")
+async def get_insights():
+    """Generate automated insights from data"""
+    
+    if current_file is None:
+        raise HTTPException(
+            status_code=400,
+            detail="No file uploaded. Please upload a file first."
+        )
+    
+    try:
+        # Generate insights
+        result = agent.generate_automated_insights()
+        
+        if not result["success"]:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "insights": result["insights"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.delete("/api/reset")
 async def reset_session():
     """Reset the current session"""

@@ -11,7 +11,8 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Styles -->
     <link rel="stylesheet" href="/static/css/style.css">
@@ -22,6 +23,7 @@
     <div class="background">
         <div class="orb orb1"></div>
         <div class="orb orb2"></div>
+        <div class="orb orb3"></div>
     </div>
 
     <!-- Main Container -->
@@ -55,12 +57,35 @@
                     <h4>✅ File Loaded: <span id="fileName"></span></h4>
                     <div class="file-stats" id="fileStats"></div>
                 </div>
+
+                <!-- Get Insights Button -->
+                <button class="btn btn-success" id="insightsBtn" style="display: none;">
+                    <span>🔍</span>
+                    Get AI Insights
+                </button>
+            </div>
+        </div>
+
+        <!-- Insights Section (Hidden initially) -->
+        <div class="card insights-section" id="insightsSection">
+            <h2 class="section-title">
+                <span>💡</span>
+                Automated Insights
+            </h2>
+
+            <div class="loading" id="insightsLoading">
+                <div class="spinner"></div>
+                <p>🤖 AI is analyzing your data...</p>
+            </div>
+
+            <div id="insightsContainer">
+                <!-- Insights will be inserted here -->
             </div>
         </div>
 
         <!-- Chat Section (Hidden initially) -->
         <div class="card chat-section" id="chatSection">
-            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <h2 class="section-title">
                 <span>💬</span>
                 Ask Questions About Your Data
             </h2>
@@ -93,17 +118,17 @@
         </div>
 
         <!-- Instructions -->
-        <div class="card">
-            <h3 style="margin-bottom: 1rem;">📚 How to Use DataWiz AI</h3>
-            <ol style="line-height: 2; color: var(--text-secondary);">
+        <div class="card instructions-card">
+            <h3 style="margin-bottom: 1.5rem;">📚 How to Use DataWiz AI</h3>
+            <ol style="line-height: 2.2; color: var(--text-secondary);">
                 <li><strong>Upload Data:</strong> Drop your CSV or Excel file above</li>
+                <li><strong>Get Insights:</strong> Click "Get AI Insights" for automated analysis</li>
                 <li><strong>Ask Questions:</strong> Type natural language questions about your data</li>
-                <li><strong>Get Insights:</strong> AI will analyze, create visualizations, and explain results</li>
                 <li><strong>Explore:</strong> Ask follow-up questions to dig deeper</li>
             </ol>
 
-            <h4 style="margin-top: 2rem; margin-bottom: 0.5rem;">💡 Example Questions:</h4>
-            <ul style="line-height: 2; color: var(--text-secondary);">
+            <h4 style="margin-top: 2rem; margin-bottom: 1rem;">💡 Example Questions:</h4>
+            <ul style="line-height: 2.2; color: var(--text-secondary);">
                 <li>"What are the top 10 items by revenue?"</li>
                 <li>"Show me a trend of sales over time"</li>
                 <li>"Calculate average price by category"</li>
@@ -113,9 +138,9 @@
         </div>
 
         <!-- Footer -->
-        <footer style="text-align: center; margin-top: 3rem; padding: 2rem; color: var(--text-secondary);">
-            <p>Made with ❤️ using Google Gemini, LangGraph & Plotly</p>
-            <p style="margin-top: 0.5rem; font-size: 0.875rem;">
+        <footer style="text-align: center; margin-top: 4rem; padding: 3rem; color: var(--text-secondary);">
+            <p style="font-size: 1.1rem; margin-bottom: 1rem;">Made with ❤️ using Google Gemini, LangGraph & Plotly</p>
+            <p style="margin-top: 0.5rem; font-size: 0.95rem;">
                 ⚡ Powered by AI • 🔒 Your data stays private • 🚀 Lightning fast analysis
             </p>
         </footer>
