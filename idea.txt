@@ -1,3 +1,0 @@
-what can i do extra  in automatining and dffernt add up adancd leval and chang in flow reled to thai Kind of business probelm
--Like Multi thng handle Inventry and sales and then Can query (can demand anylsis) and if think other  (For Now don't add up forcast /ML anaysis Will be done By API bsic ) 
----i tell How shold be user flow he will upload Inverty invoice and and also 

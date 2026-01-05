@@ -29,6 +29,11 @@ A collection of production-ready AI projects demonstrating different architectur
 - **Features**: Purchase/Sales invoicing, stock management, profit tracking, analytics dashboard
 - **Use Case**: Complete invoice management system for hardware distributors
 
+### 6️⃣ **AI Data Analyst** (`project_06_ai_data_analyst/`)
+- **Tech**: Gemini 2.0 Flash, Pandas, Plotly
+- **Features**: Automated analysis, Python code execution, Interactive visualizations, Safe sandbox
+- **Use Case**: Instant data insights and charting from CSV/Excel
+
 ---
 
 ## 🚀 Quick Start
@@ -37,17 +42,12 @@ A collection of production-ready AI projects demonstrating different architectur
 ```bash
 git clone https://github.com/YashGondaliya36/Agentic_ai.git
 cd Agentic_ai
-```
 
 ### 2. Setup Environment
 
 **Create centralized `.env` file:**
-```bash
-# Copy example file
-cp .env.example .env
 
 # Edit .env and add your API keys
-```
 
 **Required API Keys:**
 - `GOOGLE_API_KEY` - For Gemini AI (all projects)
@@ -92,6 +92,14 @@ python app.py
 # Open browser at http://localhost:8000
 ```
 
+**Project 6: AI Data Analyst**
+```bash
+cd project_06_ai_data_analyst
+pip install -r requirements.txt
+python app.py
+# Open browser at http://localhost:8000
+```
+
 ---
 
 ## 🎓 What You'll Learn
@@ -103,6 +111,7 @@ python app.py
 | **Project 3** | LangGraph, State graphs, Multi-agent, Conditional routing |
 | **Project 4** | Human-in-the-Loop, Email automation, LangGraph interrupts, Gmail API |
 | **Project 5** | FastAPI, Gemini Vision, OCR, Database design, Business analytics |
+| **Project 6** | Code generation & execution, Pandas/Plotly, Safe sandboxing, Data analysis |
 
 ---
 
@@ -133,19 +142,24 @@ Email → Classify → Need Reply? → Generate Draft → 👤 Human Approval �
 Invoice → AI Extract → Match Items → Calculate Profit → Save → Update Stock
 ```
 
+### Project 6: AI Data Analyst
+```
+CSV/Excel → Code Gen → Safe Exec → (Pandas/Plotly) → Results/Charts
+```
+
 ---
 
 ## 📊 Comparison
 
-| Feature | Project 1 | Project 2 | Project 3 | Project 4 | Project 5 |
-|---------|-----------|-----------|-----------|-----------|-----------|
-| **Type** | RAG Chatbot | Voice Assistant | Research System | Email Assistant | Invoice System |
-| **LLM** | Gemini Flash | Gemini Live | Gemini Flash | Gemini Flash | Gemini 2.5 Flash |
-| **State** | Conversation | Tool calls | Complex graph | Human-in-Loop | Database |
-| **I/O** | Text | Voice + Text | Text | Email | Web UI |
-| **Tools** | Vector DB | 3 tools | 3 agents | Gmail API | FastAPI + SQLite |
-| **Complexity** | Medium | Medium | High | High | High |
-| **UI** | CLI | CLI | CLI | CLI | Web Dashboard |
+| Feature | Project 1 | Project 2 | Project 3 | Project 4 | Project 5 | Project 6 |
+|---------|-----------|-----------|-----------|-----------|-----------|-----------|
+| **Type** | RAG Chatbot | Voice Assistant | Research System | Email Assistant | Invoice System | Data Analyst |
+| **LLM** | Gemini Flash | Gemini Live | Gemini Flash | Gemini Flash | Gemini 2.5 Flash | Gemini 2.0 Flash |
+| **State** | Conversation | Tool calls | Complex graph | Human-in-Loop | Database | Execution Env |
+| **I/O** | Text | Voice + Text | Text | Email | Web UI | Web UI |
+| **Tools** | Vector DB | 3 tools | 3 agents | Gmail API | FastAPI + SQLite | Pandas + Plotly |
+| **Complexity** | Medium | Medium | High | High | High | High |
+| **UI** | CLI | CLI | CLI | CLI | Web Dashboard | Web Dashboard |
 
 ---
 
@@ -156,12 +170,12 @@ All projects use the **centralized `.env`** file at the root level.
 ```
 Agentic_ai/
 ├── .env                             ← Single config file
-├── .env.example                     ← Template
 ├── project_01_customer_support/
 ├── project_02_voice_assistant/
 ├── project_03_langgraph_research/
 ├── project_04_smart_email_assistant/
-└── project_05_invoice_processor/
+├── project_05_invoice_processor/
+└── project_06_ai_data_analyst/
 ```
 
 **Benefits:**
@@ -206,6 +220,13 @@ Agentic_ai/
 - Business analytics dashboard
 - Supplier & customer management
 
+### **AI Data Analyst** (Project 6)
+- Instant data visualization
+- Statistical analysis
+- Automated reporting
+- Trend discovery
+- Ad-hoc data querying
+
 ---
 
 ## 🚀 Next Steps
@@ -216,16 +237,15 @@ Agentic_ai/
    - Pinecone: https://www.pinecone.io/
 
 2. **Setup `.env`**
-   ```bash
-   cp .env.example .env
+   
    # Add your API keys
-   ```
 
 3. **Choose a Project**
    - **Beginners**: Start with Project 3 (simplest setup)
-   - **Web UI Fans**: Try Project 5 (beautiful dashboard)
+   - **Web UI Fans**: Try Project 5 (beautiful dashboard) or Project 6 (interactive charts)
    - **Voice AI**: Explore Project 2 (most impressive)
    - **Email Automation**: Check out Project 4 (practical HITL)
+   - **Data Pros**: Project 6 (automated python analysis)
    - **Advanced**: Project 1 (requires Pinecone setup)
 
 4. **Experiment & Learn**
@@ -243,6 +263,7 @@ Each project has detailed README:
 - [Project 3 README](project_03_langgraph_research/README.md)
 - [Project 4 README](project_04_smart_email_assistant/README.md)
 - [Project 5 README](project_05_invoice_processor/README.md)
+- [Project 6 README](project_06_ai_data_analyst/README.md)
 
 ---
 
@@ -278,6 +299,8 @@ You've built:
 - ✅ FastAPI web application
 - ✅ Computer vision with Gemini Vision
 - ✅ Database design & analytics
+- ✅ Automated code execution system
+- ✅ Interactive data visualization
 
 **Congratulations! 🎓**
 
